@@ -98,6 +98,21 @@
   .plate .idx{position:absolute; top:14px; left:16px; z-index:2; font-size:12px; letter-spacing:.2em; color:#C9A65E}
   .silk .note{margin-top:30px; font-size:13.5px; color:#9c9081; font-style:italic}
 
+  /* recognition / video */
+  .rec{background:#1c1913; color:#EDE6D8}
+  .rec .eyebrow{color:#C9A65E}
+  .rec h2{color:#F4EEE2}
+  .rec-grid{display:grid; grid-template-columns:auto 1fr; gap:56px; align-items:center; margin-top:12px}
+  .tv{width:300px; max-width:100%; border-radius:4px; border:1px solid #3a3226; background:#000; display:block; box-shadow:0 24px 60px rgba(0,0,0,.45)}
+  .rec-txt .lede{color:#D8CDB8; margin-bottom:18px}
+  .rec-txt .lede .em{color:#DCB877; font-style:italic}
+  .rec-txt p{color:#C4BAA8; margin-bottom:16px; max-width:32em}
+  .also{display:flex; gap:18px; align-items:center; margin-top:28px; padding-top:22px; border-top:1px solid #3a3226}
+  .also img{width:96px; height:128px; object-fit:cover; border-radius:2px; flex:0 0 auto}
+  .also .cap{font-family:"Cormorant Garamond",Georgia,serif; font-size:18px; color:#C9BEA8; font-style:italic; line-height:1.42}
+  .also .cap b{color:#DCB877; font-style:normal; font-weight:500}
+  @media(max-width:760px){ .rec-grid{grid-template-columns:1fr; gap:30px; justify-items:center} }
+
   /* ---------- CRAFT x CODE ---------- */
   .cc-grid{display:grid; grid-template-columns:1.1fr .9fr; gap:56px; align-items:start}
   .cc-grid p{color:#3a342c; margin-bottom:18px}
@@ -195,11 +210,35 @@
     </div>
     <p class="lede reveal" style="max-width:34em">In 2026 I travelled the ancient Silk Road, visiting silk mills across <span class="em">Uzbekistan and China</span> — sitting with weavers, dyers and mill owners where the craft still lives. To lead this industry, I wanted to keep my hands in its origins.</p>
     <div class="gallery reveal">
-      <figure class="plate"><span class="idx">I</span><div class="ph"></div><figcaption>Silk weaving atelier — Uzbekistan</figcaption></figure>
-      <figure class="plate"><span class="idx">II</span><div class="ph"></div><figcaption>Cocoon to thread — the Fergana Valley</figcaption></figure>
-      <figure class="plate"><span class="idx">III</span><div class="ph"></div><figcaption>Mill floor — China</figcaption></figure>
+      <figure class="plate"><span class="idx">I</span><img src="media/IMG_2335.jpg" alt="Ikat silk on the loom"><figcaption>Ikat silk on the loom — Uzbekistan</figcaption></figure>
+      <figure class="plate"><span class="idx">II</span><img src="media/IMG_2358.jpg" alt="Setting the warp by hand"><figcaption>Setting the warp by hand — Uzbekistan</figcaption></figure>
+      <figure class="plate"><span class="idx">III</span><img src="media/IMG_2348.jpg" alt="Pattern archives at a working mill"><figcaption>In the pattern archives — Uzbekistan</figcaption></figure>
     </div>
-    <p class="note reveal">Replace these plates with your own photographs from the journey — the layout will hold. Captions are yours to write.</p>
+    <p class="note reveal">Uzbekistan, 2026 — where the silk still begins by hand.</p>
+  </div>
+</section>
+
+<!-- ================= RECOGNITION / VIDEO ================= -->
+<section class="rec">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="eyebrow">Recognition · Shenzhen, China</span>
+      <h2>On the record.</h2>
+    </div>
+    <div class="rec-grid reveal">
+      <video class="tv" controls preload="metadata" playsinline poster="media/interview_poster.jpg">
+        <source src="media/interview_shenzhen.mp4" type="video/mp4">
+        Your browser can't play this video — <a href="media/interview_shenzhen.mp4" style="color:#DCB877">download the clip</a>.
+      </video>
+      <div class="rec-txt">
+        <p class="lede">Invited by the <span class="em">Shenzhen Textile Association</span> and interviewed on television — a sign of the trust this industry places in cross-cultural expertise.</p>
+        <p>The bridge I care about most is carrying the standards of European luxury into the Chinese textile world — and bringing its energy back. Being asked to speak, on camera, is a quiet confirmation that the bridge is real.</p>
+        <div class="also">
+          <img src="media/IMG_1919.jpg" alt="La Moda Italiana @ Almaty 2026">
+          <div class="cap"><b>La Moda Italiana @ Almaty</b> · 2026 — helping bring Italian fashion to Central Asia.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </section>
 

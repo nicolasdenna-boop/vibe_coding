@@ -9,13 +9,23 @@ positioning by *being* hand-built.
 - `CV_Nicolas_Denna_2026_Master.pdf` — the downloadable CV (keep it next to
   `index.html` so the "Download CV" button works). Swap for the Hybrid PDF if
   you prefer.
+- `media/` — your real assets, already embedded:
+  - `interview_shenzhen.mp4` — the Shenzhen TV interview (H.264, plays in every
+    browser) + `interview_poster.jpg` (the designed poster card).
+  - `IMG_2335 / IMG_2358 / IMG_2348.jpg` — the Silk Road / Uzbekistan photos.
+  - `IMG_1919.jpg` — the "La Moda Italiana @ Almaty" poster.
 
-## Personalise
-- **Silk Road photos:** in the `SILK ROAD` section, replace each
-  `<figure class="plate">` placeholder with your own image:
-  `<figure class="plate"><span class="idx">I</span><img src="silk1.jpg"><figcaption>Your caption</figcaption></figure>`
-  (drop the photo files in this folder). Rewrite the captions to your real
-  stops.
+## Check / personalise
+- **Interview topic:** the poster card and text say *"heritage and the future of
+  textile."* If the interview was about something more specific, edit the
+  `<div class="sub">` in `interview_poster` wording and the copy in the
+  `RECOGNITION` section. *(The poster is a rendered image — ask me to
+  regenerate it if you change its text.)*
+- **Silk Road captions:** in the `SILK ROAD` section, edit any `<figcaption>`
+  to your real stops (e.g. name the city/mill). If the person in photo II is
+  you, consider "At the loom myself — Uzbekistan."
+- **Add more photos:** drop files in `media/` and copy a `<figure class="plate">`
+  block.
 - **Text:** everything is plain HTML — edit in place.
 
 ## Publish (pick one, all free, ~2 minutes)
