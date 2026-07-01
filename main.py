@@ -99,17 +99,31 @@ ROLE_SYNONYMS = [
     "Board Member",
     "Operating Partner",
     "Chief Commercial Officer",
+    "Head of Sourcing",
+    "Corporate Sourcing Director",
 ]
-INDUSTRY_KEYWORDS = ["luxury", "fashion", "textile", "private equity"]
+INDUSTRY_KEYWORDS = ["luxury", "fashion", "textile", "private equity", "venture capital"]
 
-# A few dedicated, hand-picked queries for board and PE-specific searches,
-# added on top of the synonym x keyword cross-product below.
+# Hand-picked queries covering this candidate's specific priorities: textile
+# sales leadership, corporate sourcing roles at fashion companies (not just
+# classic "sales" titles), Board/NED, and PE/VC roles (VC especially for
+# startup scaling challenges, per the candidate's stated preference). These
+# are always included in full - only the generic synonym x keyword
+# cross-product below gets truncated if the query cap is reached.
 EXTRA_QUERIES = [
     "Non-Executive Director luxury fashion",
     "Board Advisor consumer goods",
     "Private Equity Portfolio Operating Partner",
     "Private Equity Commercial Due Diligence",
+    "Textile Sales Director",
+    "Regional Sales Director textile manufacturing",
+    "Corporate Sourcing Director fashion",
+    "Head of Sourcing apparel textile",
+    "Venture Capital Operating Partner",
+    "Venture Capital Portfolio Operations startup",
 ]
+
+QUERY_CAP = 20
 
 
 def _strip_html(html: str) -> str:
@@ -118,14 +132,23 @@ def _strip_html(html: str) -> str:
 
 
 def _build_queries(role: str) -> list[str]:
-    """Expand a single role string into several search queries to widen recall."""
-    queries = {role.strip()}
+    """Expand a single role string into several search queries to widen recall.
+
+    The literal role and every EXTRA_QUERIES entry are always included; only
+    the generic synonym x keyword cross-product is truncated to stay under
+    QUERY_CAP, since that combination is far larger than the hand-picked
+    priorities above.
+    """
+    queries = [role.strip()]
+    for extra in EXTRA_QUERIES:
+        if extra not in queries:
+            queries.append(extra)
     for synonym in ROLE_SYNONYMS:
         for keyword in INDUSTRY_KEYWORDS:
-            queries.add(f"{synonym} {keyword}")
-    queries.update(EXTRA_QUERIES)
-    # Cap to keep the number of outbound API calls sane
-    return list(queries)[:14]
+            combo = f"{synonym} {keyword}"
+            if combo not in queries:
+                queries.append(combo)
+    return queries[:QUERY_CAP]
 
 
 async def fetch_board(client: httpx.AsyncClient, token: str) -> list[dict]:
@@ -545,11 +568,31 @@ def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
         "score that job 0 and state the language mismatch as the reason. Do not "
         "penalize jobs that are silent on language requirements or that only "
         "mention local language as 'a plus' rather than mandatory.\n\n"
-        "RELEVANCE RULE: This candidate is a senior commercial/strategy leader in "
-        "luxury fashion and textiles, not a generalist. Score roles outside "
-        "commercial leadership, general management, business development, or "
-        "luxury/fashion/textile/retail operations low (under 30), even if the "
-        "job title superficially contains a matching keyword."
+        "RELEVANCE RULE: This candidate is a senior commercial/strategy leader "
+        "in luxury fashion and textiles who thrives on strategy, sales "
+        "leadership, networking, people management, business development, "
+        "and organizational transformation - and is specifically drawn to "
+        "high-responsibility, high-challenge roles rather than steady-state "
+        "management. Score these categories HIGHLY:\n"
+        "1. Senior sales/commercial leadership roles specifically at TEXTILE "
+        "manufacturers, mills, or textile divisions - this is a top priority "
+        "given the candidate's deep textile industry background.\n"
+        "2. Corporate sourcing, supply chain, or procurement leadership "
+        "roles at FASHION or apparel companies - even though these aren't "
+        "classic 'sales' titles, the candidate's production and supply-chain "
+        "expertise makes strong sourcing/procurement leadership roles a "
+        "genuine fit, not a mismatch.\n"
+        "3. Private Equity roles (Operating Partner, Portfolio Operations, "
+        "Commercial Due Diligence) and especially Venture Capital roles "
+        "focused on scaling startups (Operating Partner, Portfolio "
+        "Operations) - the candidate is specifically drawn to VC/startup "
+        "environments for the ownership and challenge involved.\n"
+        "4. Non-Executive Director / Board roles in fashion, luxury, or "
+        "textile companies.\n"
+        "Score roles outside commercial leadership, general management, "
+        "business development, sourcing/supply chain leadership, or PE/VC "
+        "low (under 30), even if the job title superficially contains a "
+        "matching keyword."
     )
 
 
