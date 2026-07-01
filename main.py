@@ -261,17 +261,15 @@ async def fetch_reed(client: httpx.AsyncClient, query: str) -> list[dict]:
 # --- Careerjet (broad locale coverage — verify each locale is supported
 # for your affiliate account at careerjet.com/partners/api) ---
 CAREERJET_URL = "https://public.api.careerjet.net/search"
+# Trimmed from 10 to 5 locales - each additional locale multiplies total
+# outbound calls (locales x queries), and the dropped ones were the least
+# reliable/valuable, contributing to /rank timing out on Render under load.
 CAREERJET_LOCALES = [
     "en_US",  # USA
     "en_GB",  # fallback / UK
     "it_IT",  # Italy
     "fr_FR",  # France (candidate speaks French)
     "de_DE",  # Germany (candidate speaks German)
-    "fr_CH",  # Switzerland (French-speaking) — Geneva luxury/watch hub
-    "de_CH",  # Switzerland (German-speaking) — Zurich
-    "tr_TR",  # Turkey
-    "ar_AE",  # UAE
-    "en_IL",  # Israel — best-effort, unconfirmed Careerjet support, fails gracefully
 ]
 
 
@@ -375,13 +373,18 @@ async def fetch_hh_kz(client: httpx.AsyncClient, query: str) -> list[dict]:
 
 
 async def _fetch_all_jobs(role: str = "") -> list[dict]:
-    source_semaphore = asyncio.Semaphore(20)  # cap concurrent outbound calls across all sources
+    source_semaphore = asyncio.Semaphore(40)  # cap concurrent outbound calls across all sources
 
     async def _throttled(coro):
         async with source_semaphore:
             return await coro
 
-    async with httpx.AsyncClient(timeout=45.0) as client:
+    # A slow/unreachable host holding a 45s timeout multiplies across every
+    # concurrent batch it appears in, which is what was causing /rank to
+    # time out on Render under load. Fail fast instead - any source that
+    # doesn't respond in a few seconds is unlikely to respond usefully at
+    # all, and a slow response is worse than no response from that source.
+    async with httpx.AsyncClient(timeout=10.0) as client:
         tasks: list = [fetch_board(client, token) for token in GREENHOUSE_BOARDS]
         tasks += [fetch_lever(client, token) for token in LEVER_BOARDS]
 
@@ -664,7 +667,7 @@ async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[
     batches = [jobs[i : i + GEMINI_BATCH_SIZE] for i in range(0, len(jobs), GEMINI_BATCH_SIZE)]
     semaphore = asyncio.Semaphore(GEMINI_CONCURRENCY)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         results = await asyncio.gather(
             *(_score_batch(client, api_key, cv, role, batch, semaphore) for batch in batches),
             return_exceptions=True,
@@ -939,7 +942,7 @@ async def _filter_scan_results(hits: list[dict]) -> list[dict]:
     batches = [hits[i : i + SCAN_BATCH_SIZE] for i in range(0, len(hits), SCAN_BATCH_SIZE)]
     semaphore = asyncio.Semaphore(GEMINI_CONCURRENCY)
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         results = await asyncio.gather(
             *(_filter_scan_batch(client, api_key, batch, semaphore) for batch in batches),
             return_exceptions=True,
@@ -1088,7 +1091,7 @@ async def _rank_top10(candidates: list[dict]) -> list[dict]:
         },
     }
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
+    async with httpx.AsyncClient(timeout=30.0) as client:
         response = await _post_gemini_with_retry(client, api_key, payload)
     response.raise_for_status()
     text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
