@@ -3,11 +3,15 @@ import json
 import os
 import re
 from html import unescape
+from pathlib import Path
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
+
+load_dotenv()
 
 app = FastAPI(title="Reeds Jobs API")
 
@@ -38,6 +42,9 @@ GEMINI_BATCH_SIZE = 25
 GEMINI_CONCURRENCY = 5
 GEMINI_DESCRIPTION_CHARS = 600
 
+ADZUNA_COUNTRY = "gb"
+RECRUITERS_FILE = Path(__file__).parent / "recruiters.json"
+
 
 def _strip_html(html: str) -> str:
     text = re.sub(r"<[^>]+>", " ", html or "")
@@ -64,19 +71,149 @@ async def fetch_board(client: httpx.AsyncClient, token: str) -> list[dict]:
     return jobs
 
 
-async def _fetch_all_jobs() -> list[dict]:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        results = await asyncio.gather(
-            *(fetch_board(client, token) for token in GREENHOUSE_BOARDS),
-            return_exceptions=True,
+async def fetch_adzuna(client: httpx.AsyncClient, role: str) -> list[dict]:
+    """Fetch jobs matching the target role from the Adzuna API."""
+    app_id = os.environ.get("ADZUNA_APP_ID")
+    app_key = os.environ.get("ADZUNA_APP_KEY")
+    if not app_id or not app_key:
+        return []
+
+    response = await client.get(
+        f"https://api.adzuna.com/v1/api/jobs/{ADZUNA_COUNTRY}/search/1",
+        params={
+            "app_id": app_id,
+            "app_key": app_key,
+            "what": role,
+            "results_per_page": 50,
+            "content-type": "application/json",
+        },
+    )
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for job in data.get("results", []):
+        company = job.get("company") or {}
+        location = job.get("location") or {}
+        jobs.append(
+            {
+                "title": job.get("title"),
+                "location": location.get("display_name"),
+                "apply_url": job.get("redirect_url"),
+                "company": company.get("display_name"),
+                "description": _strip_html(job.get("description")),
+            }
         )
+    return jobs
+
+
+async def fetch_reed(client: httpx.AsyncClient, role: str) -> list[dict]:
+    """Fetch jobs matching the target role from the Reed API."""
+    api_key = os.environ.get("REED_API_KEY")
+    if not api_key:
+        return []
+
+    response = await client.get(
+        "https://www.reed.co.uk/api/1.0/search",
+        params={"keywords": role},
+        auth=(api_key, ""),
+    )
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for job in data.get("results", []):
+        jobs.append(
+            {
+                "title": job.get("jobTitle"),
+                "location": job.get("locationName"),
+                "apply_url": job.get("jobUrl"),
+                "company": job.get("employerName"),
+                "description": _strip_html(job.get("jobDescription")),
+            }
+        )
+    return jobs
+
+
+async def fetch_careerjet(client: httpx.AsyncClient, role: str) -> list[dict]:
+    """Fetch jobs matching the target role from the Careerjet API."""
+    affiliate_id = os.environ.get("CAREERJET_AFFILIATE_ID")
+    if not affiliate_id:
+        return []
+
+    response = await client.get(
+        "http://public-api.careerjet.net/search",
+        params={
+            "keywords": role,
+            "affid": affiliate_id,
+            "user_ip": "11.22.33.44",
+            "user_agent": "Mozilla/5.0",
+            "locale_code": "en_GB",
+        },
+    )
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for job in data.get("jobs", []):
+        jobs.append(
+            {
+                "title": job.get("title"),
+                "location": job.get("locations"),
+                "apply_url": job.get("url"),
+                "company": job.get("company"),
+                "description": _strip_html(job.get("description")),
+            }
+        )
+    return jobs
+
+
+async def fetch_jooble(client: httpx.AsyncClient, role: str) -> list[dict]:
+    """Fetch jobs matching the target role from the Jooble API."""
+    api_key = os.environ.get("JOOBLE_API_KEY")
+    if not api_key:
+        return []
+
+    response = await client.post(f"https://jooble.org/api/{api_key}", json={"keywords": role})
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for job in data.get("jobs", []):
+        jobs.append(
+            {
+                "title": job.get("title"),
+                "location": job.get("location"),
+                "apply_url": job.get("link"),
+                "company": job.get("company"),
+                "description": _strip_html(job.get("snippet")),
+            }
+        )
+    return jobs
+
+
+EXTRA_SOURCES = [
+    ("adzuna", fetch_adzuna),
+    ("reed", fetch_reed),
+    ("careerjet", fetch_careerjet),
+    ("jooble", fetch_jooble),
+]
+
+
+async def _fetch_all_jobs(role: str = "") -> list[dict]:
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        sources = list(GREENHOUSE_BOARDS)
+        tasks = [fetch_board(client, token) for token in GREENHOUSE_BOARDS]
+
+        if role:
+            for name, fetcher in EXTRA_SOURCES:
+                sources.append(name)
+                tasks.append(fetcher(client, role))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
     jobs: list[dict] = []
-    for token, result in zip(GREENHOUSE_BOARDS, results):
+    for source, result in zip(sources, results):
         if isinstance(result, Exception):
             raise HTTPException(
                 status_code=502,
-                detail=f"Failed to fetch jobs for board '{token}': {result}",
+                detail=f"Failed to fetch jobs for source '{source}': {result}",
             )
         jobs.extend(result)
     return jobs
@@ -88,6 +225,13 @@ async def get_jobs() -> dict:
     jobs = await _fetch_all_jobs()
     public_jobs = [{k: v for k, v in job.items() if k != "description"} for job in jobs]
     return {"count": len(public_jobs), "jobs": public_jobs}
+
+
+@app.get("/recruiters")
+async def get_recruiters() -> list[dict]:
+    """Serve the static list of recruiter contacts."""
+    with open(RECRUITERS_FILE) as f:
+        return json.load(f)
 
 
 class RankRequest(BaseModel):
@@ -198,7 +342,7 @@ async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[
 @app.post("/rank")
 async def rank_jobs(payload: RankRequest) -> dict:
     """Rank all fetched jobs by how well they fit the given CV and target role, using Gemini."""
-    jobs = await _fetch_all_jobs()
+    jobs = await _fetch_all_jobs(payload.role)
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
     scored_jobs.sort(key=lambda job: job["score"], reverse=True)
     return {"count": len(scored_jobs), "jobs": scored_jobs}
