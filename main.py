@@ -2,6 +2,7 @@ import asyncio
 import json
 import logging
 import os
+import random
 import re
 from datetime import date
 from html import unescape
@@ -62,7 +63,9 @@ GEMINI_CONCURRENCY = 5
 GEMINI_DESCRIPTION_CHARS = 600
 GEMINI_MAX_RETRIES = 4
 GEMINI_RETRY_BASE_DELAY = 2.0
-MAX_JOBS_FOR_SCORING = 400  # safety cap so a very large raw fetch can't blow /rank's request time budget
+MAX_JOBS_FOR_SCORING = 100  # 400 was too high once fetch breadth widened - at batch size 25 that's up to
+# 16 Gemini calls per search, which blows straight through the free tier's per-minute rate limit and
+# compounds into a request timeout as each batch retries with backoff. 100 keeps it to ~4 batches.
 
 
 async def _post_gemini_with_retry(client: httpx.AsyncClient, api_key: str, payload: dict) -> httpx.Response:
@@ -760,7 +763,12 @@ async def rank_jobs(payload: RankRequest) -> dict:
     if not jobs:
         return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
 
-    jobs = jobs[:MAX_JOBS_FOR_SCORING]
+    if len(jobs) > MAX_JOBS_FOR_SCORING:
+        # Shuffle before truncating so the cap doesn't systematically favor
+        # whichever source happens to run first in _fetch_all_jobs (e.g.
+        # always Adzuna over Jooble/SerpAPI) - fair sampling across sources.
+        random.shuffle(jobs)
+        jobs = jobs[:MAX_JOBS_FOR_SCORING]
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
     # Only drop clear non-fits and language mismatches (score < 15 per the
     # prompt's relevance bands) - biased toward inclusion so plausible
