@@ -100,6 +100,24 @@
           "url": "https://reverse.hr/it/headhunting-milano",
           "specialty": "Fashion, Luxury & Design practice",
           "notes": "One of several sector verticals at this Milan headhunting firm"
+        },
+        {
+          "name": "Suitex International",
+          "url": "https://suitex.it/en/",
+          "specialty": "Fashion, Luxury & Design executive search",
+          "notes": "40+ years specialized in the fashion industry, offices in Milan and Venice"
+        }
+      ]
+    },
+    {
+      "region": "Spain — Luxury, Fashion, Retail (Barcelona HQ, pan-European)",
+      "countryCode": "ES",
+      "agencies": [
+        {
+          "name": "Luxe Talent",
+          "url": "https://www.luxetalent.net",
+          "specialty": "Luxury, Fashion, Retail, Hospitality, FMCG executive & middle-management search",
+          "notes": "Barcelona HQ since 2009, offices in Madrid, Paris, Milan, Munich, Amsterdam, Braga; international job offers page covers many countries"
         }
       ]
     },

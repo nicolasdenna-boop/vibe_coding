@@ -249,8 +249,10 @@ async def fetch_careerjet(client: httpx.AsyncClient, query: str, locale: str) ->
             },
         )
         response.raise_for_status()
-    except httpx.HTTPStatusError:
-        # Some locales may not be supported / may be rate-limited without an affid
+    except httpx.HTTPError:
+        # Some locales may not be supported, may be rate-limited without an
+        # affid, or the host may be unreachable from this network (e.g. cloud
+        # provider IP ranges blocked) - degrade gracefully either way
         return []
     data = response.json()
     jobs = []
@@ -306,7 +308,10 @@ async def fetch_hh_kz(client: httpx.AsyncClient, query: str) -> list[dict]:
     response = await client.get(
         HH_KZ_URL,
         params={"text": query, "area": HH_KZ_AREA_ID, "per_page": 20},
-        headers={"HH-User-Agent": "JobMatchApp/1.0 (contact@example.com)"},
+        # hh.ru's API requires callers to identify themselves via the
+        # standard User-Agent header (not a custom header name) - a generic
+        # default User-Agent gets rejected with 400 Bad Request.
+        headers={"User-Agent": "JobMatchApp/1.0 (contact@example.com)"},
     )
     response.raise_for_status()
     data = response.json()
@@ -593,6 +598,11 @@ PLATFORM_SITES = [
     "jobstreet.com",
     "wellfound.com",  # formerly AngelList Talent — startup-heavy
     "builtin.com",  # startup/tech-heavy, under-indexed on general boards
+    "suitex.it",  # Suitex International — fashion/luxury/design executive search, Milan/Venice
+    "luxetalent.it",  # Luxe Talent's Italian site (as given)
+    "luxetalent.net",  # Luxe Talent's main international hub — offices across Europe, worldwide placements
+    "fashionjobs.com",  # global fashion/luxury/beauty job board, 50+ country subdomains (site: matches all of them)
+    "businessoffashion.com",  # BoF Careers — international fashion industry jobs, business/exec-skewed
 ]
 
 WATCH_QUERIES = [
