@@ -417,6 +417,28 @@ async def get_jobs(role: str = "") -> dict:
     return {"count": len(public_jobs), "jobs": public_jobs}
 
 
+@app.get("/debug/gemini")
+async def debug_gemini() -> dict:
+    """Diagnostic endpoint: makes one trivial Gemini call to verify the API
+    key and connectivity work at all, independent of any job data - so a
+    Gemini outage/quota/key problem can be distinguished from other issues."""
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        return {"ok": False, "detail": "GEMINI_API_KEY environment variable is not set"}
+
+    payload = {"contents": [{"parts": [{"text": "Reply with exactly the digits 42 and nothing else."}]}]}
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await _post_gemini_with_retry(client, api_key, payload)
+        return {
+            "ok": response.status_code == 200,
+            "status": response.status_code,
+            "body": response.text[:500],
+        }
+    except Exception as exc:
+        return {"ok": False, "detail": f"EXCEPTION: {exc}"}
+
+
 @app.get("/debug/sources")
 async def debug_sources(role: str = "Commercial Director luxury fashion") -> dict:
     """Diagnostic endpoint: shows how many jobs each source returns for a given role."""
@@ -601,11 +623,23 @@ async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[
         )
 
     scored_jobs: list[dict] = []
+    failures = []
     for result in results:
         if isinstance(result, Exception):
             logger.warning("A Gemini scoring batch failed: %s", result)
+            failures.append(str(result))
             continue
         scored_jobs.extend(result)
+
+    if batches and len(failures) == len(batches):
+        # Every batch failed - this must not look identical to "Gemini
+        # genuinely found 0 relevant jobs", or a real outage (bad key,
+        # rate limit exhausted, etc.) silently looks like a normal empty
+        # result instead of the error it actually is.
+        raise HTTPException(
+            status_code=502,
+            detail=f"Gemini scoring failed for all {len(batches)} batch(es): {failures[0]}",
+        )
     return scored_jobs
 
 
