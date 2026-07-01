@@ -62,6 +62,7 @@ GEMINI_CONCURRENCY = 5
 GEMINI_DESCRIPTION_CHARS = 600
 GEMINI_MAX_RETRIES = 4
 GEMINI_RETRY_BASE_DELAY = 2.0
+MAX_JOBS_FOR_SCORING = 400  # safety cap so a very large raw fetch can't blow /rank's request time budget
 
 
 async def _post_gemini_with_retry(client: httpx.AsyncClient, api_key: str, payload: dict) -> httpx.Response:
@@ -121,6 +122,14 @@ EXTRA_QUERIES = [
     "Head of Sourcing apparel textile",
     "Venture Capital Operating Partner",
     "Venture Capital Portfolio Operations startup",
+    # Generic/industrial textile - not just fashion/apparel. Textile is a
+    # much bigger industry than fashion alone (home textiles, technical/
+    # industrial textiles, automotive textiles, nonwovens).
+    "Sales Director industrial textiles",
+    "Commercial Director technical textiles",
+    "Sales Director nonwovens",
+    "Regional Sales Director home textiles",
+    "Commercial Director automotive textiles",
 ]
 
 QUERY_CAP = 20
@@ -192,7 +201,7 @@ async def fetch_lever(client: httpx.AsyncClient, token: str) -> list[dict]:
 
 
 # --- Adzuna (broad country coverage, free tier) ---
-ADZUNA_COUNTRIES = ["us", "gb", "it", "fr", "de", "il"]  # "il" is best-effort — Adzuna's Israel coverage is unconfirmed, but the fetcher fails gracefully if unsupported. "ae" removed - confirmed 404, Adzuna doesn't cover the UAE.
+ADZUNA_COUNTRIES = ["us", "gb", "it", "fr", "de", "il", "au"]  # "il" is best-effort — Adzuna's Israel coverage is unconfirmed, but the fetcher fails gracefully if unsupported. "ae" removed - confirmed 404, Adzuna doesn't cover the UAE. "au" (Australia) confirmed supported.
 ADZUNA_URL = "https://api.adzuna.com/v1/api/jobs/{country}/search/1"
 
 
@@ -204,7 +213,7 @@ async def fetch_adzuna(client: httpx.AsyncClient, country: str, query: str, wher
     params = {
         "app_id": app_id,
         "app_key": app_key,
-        "results_per_page": 50 if country == "us" else 20,  # more volume in the US, as requested
+        "results_per_page": 50,  # Adzuna's confirmed per-request maximum - single call, no extra latency
         "what": query,
         "content-type": "application/json",
     }
@@ -238,7 +247,7 @@ async def fetch_reed(client: httpx.AsyncClient, query: str) -> list[dict]:
         return []
     response = await client.get(
         REED_URL,
-        params={"keywords": query, "resultsToTake": 20},
+        params={"keywords": query, "resultsToTake": 50},  # Reed supports up to 100; 50 balances volume vs. downstream Gemini load
         auth=(api_key, ""),
     )
     response.raise_for_status()
@@ -311,13 +320,13 @@ async def fetch_careerjet(client: httpx.AsyncClient, query: str, locale: str) ->
 JOOBLE_URL = "https://jooble.org/api/{key}"
 
 
-async def fetch_jooble(client: httpx.AsyncClient, query: str, location: str = "") -> list[dict]:
+async def fetch_jooble(client: httpx.AsyncClient, query: str, location: str = "", page: int = 1) -> list[dict]:
     api_key = os.environ.get("JOOBLE_API_KEY")
     if not api_key:
         return []
     response = await client.post(
         JOOBLE_URL.format(key=api_key),
-        json={"keywords": query, "location": location},
+        json={"keywords": query, "location": location, "page": page},
     )
     response.raise_for_status()
     data = response.json()
@@ -372,6 +381,27 @@ async def fetch_hh_kz(client: httpx.AsyncClient, query: str) -> list[dict]:
     return jobs
 
 
+# A focused subset of PLATFORM_SITES (defined later, used by /scan-and-alert)
+# for /rank's broader search - kept smaller than the full list to limit
+# added latency, prioritizing general reach (LinkedIn, Indeed) plus
+# textile/fashion specialist sites.
+RANK_SERP_PLATFORMS = ["linkedin.com/jobs", "indeed.com", "suitex.it", "luxetalent.net", "fashionjobs.com"]
+
+
+def _serp_hit_to_job(hit: dict) -> dict:
+    """Convert a raw {title, link, snippet, platform} search hit into the
+    same job dict shape used everywhere else, so it can flow through the
+    existing Gemini scoring pipeline unchanged."""
+    return {
+        "title": hit.get("title"),
+        "location": None,
+        "apply_url": hit.get("link"),
+        "company": "Unknown",
+        "description": hit.get("snippet") or "",
+        "source": f"serp_{hit.get('platform')}",
+    }
+
+
 async def _fetch_all_jobs(role: str = "") -> list[dict]:
     source_semaphore = asyncio.Semaphore(40)  # cap concurrent outbound calls across all sources
 
@@ -388,6 +418,7 @@ async def _fetch_all_jobs(role: str = "") -> list[dict]:
         tasks: list = [fetch_board(client, token) for token in GREENHOUSE_BOARDS]
         tasks += [fetch_lever(client, token) for token in LEVER_BOARDS]
 
+        serp_task_count = 0
         if role:
             queries = _build_queries(role)
             for query in queries:
@@ -396,11 +427,32 @@ async def _fetch_all_jobs(role: str = "") -> list[dict]:
                 tasks.append(fetch_reed(client, query))
                 tasks.append(fetch_jooble(client, query))
                 tasks.append(fetch_jooble(client, query, location="Israel"))
+                tasks.append(fetch_jooble(client, query, page=2))
                 tasks.append(fetch_hh_kz(client, query))
                 for locale in CAREERJET_LOCALES:
                     tasks.append(fetch_careerjet(client, query, locale))
+                # Broader web search (LinkedIn, Indeed, and textile/fashion
+                # specialist sites) via SerpAPI, reusing the same mechanism
+                # built for /scan-and-alert - only fires if SERPAPI_KEY is
+                # set, otherwise search_job_platforms returns [] for free.
+                # This is a much wider net than the job-board APIs alone,
+                # since general job APIs return few results for a niche
+                # industry like textiles.
+                for site in RANK_SERP_PLATFORMS:
+                    tasks.append(search_job_platforms(client, f"{query} textile", site))
+                    serp_task_count += 1
 
         results = await asyncio.gather(*(_throttled(t) for t in tasks), return_exceptions=True)
+        # The last serp_task_count results are raw {title, link, snippet,
+        # platform} search hits, not job dicts - convert them before merging.
+        if serp_task_count:
+            serp_results = results[-serp_task_count:]
+            results = results[:-serp_task_count]
+            for result in serp_results:
+                if isinstance(result, Exception):
+                    logger.warning("A platform search call failed: %s", result)
+                    continue
+                results.append([_serp_hit_to_job(hit) for hit in result])
 
     jobs: list[dict] = []
     failures = 0
@@ -423,11 +475,15 @@ async def _fetch_all_jobs(role: str = "") -> list[dict]:
 
     jobs = [job for job in jobs if not _is_excluded_france_job(job)]
 
-    # De-duplicate by (title, company) since query expansion causes overlap
+    # De-duplicate by (title, company, apply_url) since query expansion
+    # causes overlap. apply_url is included because SerpAPI-derived jobs all
+    # share company="Unknown" (no structured company field in search
+    # snippets) - without it, distinct postings from different real
+    # companies with the same title would incorrectly collapse into one.
     seen = set()
     deduped = []
     for job in jobs:
-        key = (job.get("title"), job.get("company"))
+        key = (job.get("title"), job.get("company"), job.get("apply_url"))
         if key in seen:
             continue
         seen.add(key)
@@ -583,8 +639,12 @@ def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
         "or accounting role). Use these score bands:\n"
         "70-100: Senior sales/commercial leadership specifically at TEXTILE "
         "manufacturers, mills, or textile divisions (top priority given the "
-        "candidate's deep textile background); OR corporate sourcing, supply "
-        "chain, or procurement leadership at FASHION/apparel companies; OR "
+        "candidate's deep textile background) - this covers the FULL textile "
+        "industry, not just fashion/apparel: home textiles, technical/"
+        "industrial textiles, automotive textiles, nonwovens, geotextiles, "
+        "yarn/fiber/fabric production, and textile machinery, in addition "
+        "to apparel/fashion textiles; OR corporate sourcing, supply chain, "
+        "or procurement leadership at FASHION/apparel companies; OR "
         "Private Equity roles (Operating Partner, Portfolio Operations, "
         "Commercial Due Diligence) or Venture Capital roles focused on "
         "scaling startups; OR Non-Executive Director/Board roles at fashion, "
@@ -700,6 +760,7 @@ async def rank_jobs(payload: RankRequest) -> dict:
     if not jobs:
         return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
 
+    jobs = jobs[:MAX_JOBS_FOR_SCORING]
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
     # Only drop clear non-fits and language mismatches (score < 15 per the
     # prompt's relevance bands) - biased toward inclusion so plausible
