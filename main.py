@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+from datetime import date
 from html import unescape
 
 import httpx
@@ -623,21 +624,27 @@ SCAN_RESULTS_PER_QUERY = 20
 SCAN_BATCH_SIZE = 30
 
 
-async def search_job_platforms(client: httpx.AsyncClient, query: str, site: str) -> list[dict]:
-    """Search one job platform for a query via SerpAPI's site: operator (not scraping)."""
+async def search_job_platforms(client: httpx.AsyncClient, query: str, site: str, tbs: str = "") -> list[dict]:
+    """Search one job platform for a query via SerpAPI's site: operator (not scraping).
+
+    tbs is SerpAPI's time-filter param (e.g. "qdr:w" for the past week) - when
+    set, freshness is enforced by the search itself rather than left to Gemini
+    to guess from a snippet.
+    """
     api_key = os.environ.get("SERPAPI_KEY")
     if not api_key:
         return []
 
-    response = await client.get(
-        SERPAPI_URL,
-        params={
-            "engine": "google",
-            "q": f"site:{site} {query}",
-            "api_key": api_key,
-            "num": SCAN_RESULTS_PER_QUERY,
-        },
-    )
+    params = {
+        "engine": "google",
+        "q": f"site:{site} {query}",
+        "api_key": api_key,
+        "num": SCAN_RESULTS_PER_QUERY,
+    }
+    if tbs:
+        params["tbs"] = tbs
+
+    response = await client.get(SERPAPI_URL, params=params)
     response.raise_for_status()
     data = response.json()
     hits = []
@@ -653,12 +660,12 @@ async def search_job_platforms(client: httpx.AsyncClient, query: str, site: str)
     return hits
 
 
-async def _run_platform_scan() -> list[dict]:
+async def _run_platform_scan(tbs: str = "") -> list[dict]:
     semaphore = asyncio.Semaphore(SCAN_CONCURRENCY)
 
     async def _throttled(client: httpx.AsyncClient, query: str, site: str):
         async with semaphore:
-            return await search_job_platforms(client, query, site)
+            return await search_job_platforms(client, query, site, tbs=tbs)
 
     async with httpx.AsyncClient(timeout=30.0) as client:
         tasks = [_throttled(client, query, site) for query in WATCH_QUERIES for site in PLATFORM_SITES]
@@ -855,3 +862,138 @@ async def scan_and_alert() -> dict:
         await _send_digest_email(client, jobs)
 
     return {"raw_hits": len(hits), "matches": len(jobs), "emailed": True, "jobs": jobs}
+
+
+# ============================================================
+# Weekly "Top 10 Fresh Jobs" (separate from /rank, /recruiters, and
+# /scan-and-alert - reuses WATCH_QUERIES, PLATFORM_SITES,
+# search_job_platforms, _run_platform_scan, and _filter_scan_results, but
+# narrows the broad digest down to exactly the 10 most relevant, freshly
+# published (past week) postings overall via a second Gemini ranking pass).
+# ============================================================
+
+_TOP10_RANK_SCHEMA = {
+    "type": "ARRAY",
+    "maxItems": 10,
+    "items": {
+        "type": "OBJECT",
+        "properties": {
+            "rank": {"type": "INTEGER"},
+            "title": {"type": "STRING"},
+            "company_guess": {"type": "STRING"},
+            "link": {"type": "STRING"},
+            "platform": {"type": "STRING"},
+            "category": {"type": "STRING", "enum": ALERT_CATEGORIES},
+            "reason": {"type": "STRING"},
+        },
+        "required": ["rank", "title", "company_guess", "link", "platform", "category", "reason"],
+    },
+}
+
+
+def _build_top10_prompt(candidates: list[dict]) -> str:
+    listing = [
+        {
+            "title": job.get("title"),
+            "company_guess": job.get("company_guess"),
+            "link": job.get("link"),
+            "platform": job.get("platform"),
+            "category": job.get("category"),
+            "reason": job.get("one_line_reason"),
+        }
+        for job in candidates
+    ]
+    return (
+        "From this list of job postings, select and rank the 10 most relevant "
+        "and senior opportunities overall, prioritizing Textile, senior "
+        "Sales/Commercial leadership, Board/Non-Executive Director roles, and "
+        "commercial roles at fashion-tech or textile-tech startups. Return "
+        "exactly 10 items (fewer only if there are truly fewer than 10 "
+        "qualifying results), each with title, company_guess, link, platform, "
+        "category, and a one-sentence reason this made the top 10.\n\n"
+        f"CANDIDATES:\n{json.dumps(listing)}"
+    )
+
+
+async def _rank_top10(candidates: list[dict]) -> list[dict]:
+    if not candidates:
+        return []
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY environment variable is not set")
+
+    payload = {
+        "contents": [{"parts": [{"text": _build_top10_prompt(candidates)}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "response_schema": _TOP10_RANK_SCHEMA,
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+    response.raise_for_status()
+    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    results = json.loads(text)
+    results.sort(key=lambda job: job.get("rank", 999))
+    return results[:10]
+
+
+def _build_top10_html(jobs: list[dict]) -> str:
+    if not jobs:
+        return "<p>No qualifying roles found this week.</p>"
+
+    return "".join(
+        f"<p>#{job['rank']}. <strong>{job['title']}</strong> at {job.get('company_guess', '')} "
+        f"&mdash; {job['platform']}<br>"
+        f"<a href=\"{job['link']}\">{job['link']}</a><br>"
+        f"{job.get('reason', '')}</p>"
+        for job in jobs
+    )
+
+
+async def _send_top10_email(client: httpx.AsyncClient, jobs: list[dict]) -> None:
+    api_key = os.environ.get("SENDGRID_API_KEY")
+    to_email = os.environ.get("ALERT_EMAIL_TO")
+    from_email = os.environ.get("ALERT_EMAIL_FROM")
+    if not (api_key and to_email and from_email):
+        raise HTTPException(
+            status_code=500,
+            detail="SENDGRID_API_KEY, ALERT_EMAIL_TO, and ALERT_EMAIL_FROM must all be set",
+        )
+
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": from_email},
+        "subject": f"Your Top 10 Fresh Jobs This Week — {date.today().isoformat()}",
+        "content": [{"type": "text/html", "value": _build_top10_html(jobs)}],
+    }
+    response = await client.post(
+        SENDGRID_URL,
+        headers={"Authorization": f"Bearer {api_key}"},
+        json=payload,
+    )
+    response.raise_for_status()
+
+
+@app.get("/weekly-top10-preview")
+async def weekly_top10_preview() -> dict:
+    """Run search (past week only) -> filter -> rank, return the top 10 as JSON only."""
+    hits = await _run_platform_scan(tbs="qdr:w")
+    candidates = await _filter_scan_results(hits)
+    top10 = await _rank_top10(candidates)
+    return {"raw_hits": len(hits), "candidates": len(candidates), "top10": top10}
+
+
+@app.post("/weekly-top10")
+async def weekly_top10() -> dict:
+    """Run the full weekly pipeline (search -> filter -> rank -> email) and return a summary."""
+    hits = await _run_platform_scan(tbs="qdr:w")
+    candidates = await _filter_scan_results(hits)
+    top10 = await _rank_top10(candidates)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        await _send_top10_email(client, top10)
+
+    return {"raw_hits": len(hits), "candidates": len(candidates), "top10": top10, "emailed": True}
