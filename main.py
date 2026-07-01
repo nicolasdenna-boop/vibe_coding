@@ -430,6 +430,51 @@ async def debug_sources(role: str = "Commercial Director luxury fashion") -> dic
             summary[name] = f"ERROR: {result}"
         else:
             summary[name] = len(result)
+
+    # Adzuna/Reed/Jooble parse "results"/"jobs" out of the response body and
+    # silently return [] if that key is missing - which means an API error
+    # disguised as a normal-looking response (bad key, quota exceeded, etc.)
+    # would otherwise look identical to "genuinely zero results". Show the
+    # raw response for these three so that distinction is visible.
+    raw = {}
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        app_id = os.environ.get("ADZUNA_APP_ID")
+        app_key = os.environ.get("ADZUNA_APP_KEY")
+        if app_id and app_key:
+            try:
+                r = await client.get(
+                    ADZUNA_URL.format(country="us"),
+                    params={
+                        "app_id": app_id,
+                        "app_key": app_key,
+                        "what": role,
+                        "results_per_page": 1,
+                        "content-type": "application/json",
+                    },
+                )
+                raw["adzuna_us_raw"] = {"status": r.status_code, "body": r.text[:500]}
+            except Exception as exc:
+                raw["adzuna_us_raw"] = f"EXCEPTION: {exc}"
+
+        reed_key = os.environ.get("REED_API_KEY")
+        if reed_key:
+            try:
+                r = await client.get(
+                    REED_URL, params={"keywords": role, "resultsToTake": 1}, auth=(reed_key, "")
+                )
+                raw["reed_raw"] = {"status": r.status_code, "body": r.text[:500]}
+            except Exception as exc:
+                raw["reed_raw"] = f"EXCEPTION: {exc}"
+
+        jooble_key = os.environ.get("JOOBLE_API_KEY")
+        if jooble_key:
+            try:
+                r = await client.post(JOOBLE_URL.format(key=jooble_key), json={"keywords": role})
+                raw["jooble_raw"] = {"status": r.status_code, "body": r.text[:500]}
+            except Exception as exc:
+                raw["jooble_raw"] = f"EXCEPTION: {exc}"
+
+    summary["_raw_previews"] = raw
     return summary
 
 
