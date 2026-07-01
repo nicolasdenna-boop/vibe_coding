@@ -305,15 +305,19 @@ HH_KZ_AREA_ID = 40  # Kazakhstan
 
 
 async def fetch_hh_kz(client: httpx.AsyncClient, query: str) -> list[dict]:
-    response = await client.get(
-        HH_KZ_URL,
-        params={"text": query, "area": HH_KZ_AREA_ID, "per_page": 20},
-        # hh.ru's API requires callers to identify themselves via the
-        # standard User-Agent header (not a custom header name) - a generic
-        # default User-Agent gets rejected with 400 Bad Request.
-        headers={"User-Agent": "JobMatchApp/1.0 (contact@example.com)"},
-    )
-    response.raise_for_status()
+    try:
+        response = await client.get(
+            HH_KZ_URL,
+            params={"text": query, "area": HH_KZ_AREA_ID, "per_page": 20},
+            headers={"User-Agent": "JobMatchApp/1.0 (contact@example.com)"},
+        )
+        response.raise_for_status()
+    except httpx.HTTPError:
+        # hh.ru appears to reject requests from cloud/datacenter IP ranges
+        # regardless of headers (observed 400/403 from multiple hosting
+        # providers) - this is outside our control, so degrade gracefully
+        # like the other best-effort sources rather than surfacing an error.
+        return []
     data = response.json()
     jobs = []
     for item in data.get("items", []):
