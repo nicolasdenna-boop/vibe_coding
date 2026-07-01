@@ -84,9 +84,19 @@ reconnected you to the next generation building this future. This reads as
 - **Grew turnover +40%** with demanding luxury clients; deep expertise in
   exclusive/creative fabric development (Jacquards, Rachels, shuttle/hand looms).
 
+**Brand Selection — Founder (2024–Present)** *(early-stage / exploratory)*
+- Signed **27 Italian SME brands** and built a network of **~50 agents** across
+  Italy, the EU and beyond onto a B2B marketplace.
+- Designed and built a **phygital sales process** with a **digital-twin 3D
+  gallery** for a hybrid physical-plus-digital purchase journey — the concrete
+  proof of the "luxury × AI" positioning.
+- Lifted **average order value €250 → €850 (3.4×)**; marketplace conversion
+  ~30% vs a ~2.5% industry benchmark.
+- Self-taught **coding** + multiple **AI certifications** (sales automation,
+  AI-assisted presentations), applied to real commercial workflows.
+
 *(Earlier: Canclini BD/Europe Sales; Opto-Engineering India Country Manager —
-founded the rep office; General-Oxo co-founder. Now: Brand Selection, own B2B
-venture for Italian fashion SMEs.)*
+founded the rep office; General-Oxo co-founder.)*
 
 ## 6. Leadership profile
 
