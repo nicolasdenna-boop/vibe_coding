@@ -153,6 +153,34 @@
   .invite{font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(20px,2.4vw,26px); color:#3a342c; max-width:24em; margin:22px auto 0; line-height:1.5}
   @media(max-width:760px){ .turn{grid-template-columns:1fr; gap:28px} .portrait{max-width:240px; margin:0 auto} }
 
+  /* MBTI portrait tag */
+  .ptag{margin-top:14px; text-align:center; font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .ptag b{color:var(--accent-dk)}
+
+  /* balanced scorecard */
+  .bsc{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line); border:1px solid var(--line)}
+  .q{background:var(--bg); padding:34px 32px}
+  .q .qh{display:flex; align-items:baseline; gap:11px; margin-bottom:14px}
+  .q .qn{font-family:"Playfair Display",Georgia,serif; font-size:16px; color:var(--accent); font-style:italic}
+  .q .ql{font-size:11.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .q .metric{font-family:"Playfair Display",Georgia,serif; font-size:clamp(28px,3.6vw,40px); color:var(--ink); line-height:1; margin-bottom:16px; font-weight:500}
+  .q .metric .u{color:var(--accent); font-size:.5em; vertical-align:.18em}
+  .q ul{list-style:none; padding:0; margin:0}
+  .q li{position:relative; padding-left:16px; margin:7px 0; font-size:14.5px; color:#463f36; line-height:1.42}
+  .q li:before{content:"—"; position:absolute; left:0; color:var(--accent)}
+  .q li b{color:var(--ink); font-weight:600}
+  @media(max-width:760px){ .bsc{grid-template-columns:1fr} }
+
+  /* live store card */
+  .storecard{border:1px solid var(--accent); background:var(--paper); border-radius:4px; padding:26px; margin-bottom:20px; position:relative}
+  .storecard .se{font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600}
+  .storecard h3{font-family:"Playfair Display",Georgia,serif; font-size:23px; margin:9px 0; font-weight:500}
+  .storecard p{color:#463f36; font-size:14.5px; margin-bottom:16px}
+  .storecard .go{display:inline-block; padding:12px 22px; background:var(--ink); color:var(--bg); text-decoration:none; font-size:12.5px; letter-spacing:.08em; text-transform:uppercase; border-radius:2px; transition:.2s}
+  .storecard .go:hover{background:var(--accent-dk)}
+  .storecard .live{position:absolute; top:22px; right:24px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-dk)}
+  .storecard .live:before{content:"●"; color:#3c9a6b; margin-right:6px; font-size:9px; vertical-align:1px}
+
   @media(max-width:760px){
     .stats{grid-template-columns:repeat(2,1fr)}
     .gallery{grid-template-columns:1fr 1fr}
@@ -180,9 +208,12 @@
 <!-- ================= STATEMENT ================= -->
 <section class="statement">
   <div class="wrap turn reveal">
-    <div class="portrait">
-      <img src="media/portrait.jpg" alt="Nicolas Denna" onerror="this.style.display='none';this.parentElement.classList.add('empty')">
-      <span class="mono">ND</span>
+    <div>
+      <div class="portrait">
+        <img src="media/portrait.jpg" alt="Nicolas Denna" onerror="this.style.display='none';this.parentElement.classList.add('empty')">
+        <span class="mono">ND</span>
+      </div>
+      <div class="ptag"><b>ESTJ</b> · The Executive</div>
     </div>
     <div class="turn-txt">
       <p>For six years I ran the commercial engine at the summit of luxury textile — Hermès, the Executive Committee, eight factories, a business built on the finest craft in the world.</p>
@@ -192,20 +223,50 @@
   </div>
 </section>
 
-<!-- ================= IMPACT ================= -->
+<!-- ================= BALANCED SCORECARD ================= -->
 <section>
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow">Selected Impact</span>
-      <h2>Numbers that hold their weight.</h2>
+      <span class="eyebrow">Impact · A Balanced Scorecard</span>
+      <h2>Measured on every axis that matters.</h2>
     </div>
-    <div class="stats reveal">
-      <div class="stat"><div class="num" data-to="6"></div><div class="lbl"><b>Years as Commercial Director</b> at Hermès, on the Business Unit Executive Committee.</div></div>
-      <div class="stat"><div class="num" data-to="20" data-suffix="×"></div><div class="lbl">A new textile-accessories line <b>built from scratch</b> — €100K to €2M.</div></div>
-      <div class="stat"><div class="num" data-prefix="~€" data-to="30" data-suffix="M"></div><div class="lbl">Commercial <b>P&amp;L across four Asian offices</b> at Zegna Baruffa.</div></div>
-      <div class="stat"><div class="num" data-prefix="+" data-to="40" data-suffix="%"></div><div class="lbl">Turnover growth across <b>four European markets</b> at Bonotto.</div></div>
-      <div class="stat"><div class="num" data-to="300" data-arrow="20"></div><div class="lbl">Client portfolio <b>re-engineered to a premium core</b>, lifting service &amp; margin.</div></div>
-      <div class="stat"><div class="num" data-to="3.4" data-suffix="×" data-dec="1"></div><div class="lbl">Order-value uplift on my <b>phygital B2B platform</b>, Brand Selection.</div></div>
+    <div class="bsc reveal">
+      <div class="q">
+        <div class="qh"><span class="qn">01</span><span class="ql">Financial</span></div>
+        <div class="metric">20<span class="u">×</span></div>
+        <ul>
+          <li>New textile-accessories line built from scratch — <b>€100K → €2M</b>.</li>
+          <li><b>~€30M</b> commercial P&amp;L led across four Asian offices.</li>
+          <li><b>+40%</b> turnover growth at Bonotto.</li>
+        </ul>
+      </div>
+      <div class="q">
+        <div class="qh"><span class="qn">02</span><span class="ql">Customer &amp; Market</span></div>
+        <div class="metric">300 <span class="u">→ 20</span></div>
+        <ul>
+          <li>Client portfolio re-engineered to a <b>premium core</b> — higher service and margin.</li>
+          <li><b>27 brands</b> onboarded to a phygital B2B marketplace.</li>
+          <li><b>3.4×</b> average order value on the platform I built.</li>
+        </ul>
+      </div>
+      <div class="q">
+        <div class="qh"><span class="qn">03</span><span class="ql">Operations &amp; Excellence</span></div>
+        <div class="metric">8 <span class="u">sites</span></div>
+        <ul>
+          <li>Restructured a business unit spanning <b>eight textile factories</b>.</li>
+          <li>Cross-skilled the team into <b>hybrid commercial-technical</b> roles.</li>
+          <li>Cut tradeshow &amp; sampling cost while <b>protecting margin</b>.</li>
+        </ul>
+      </div>
+      <div class="q">
+        <div class="qh"><span class="qn">04</span><span class="ql">Innovation &amp; Growth</span></div>
+        <div class="metric">Craft <span class="u">× AI</span></div>
+        <ul>
+          <li>Global MBA in AI &amp; Entrepreneurship; <b>self-taught coding</b>.</li>
+          <li>Built a live <b>phygital 3D store</b> — a digital twin for retail.</li>
+          <li>Invited to speak on <b>Chinese television</b>.</li>
+        </ul>
+      </div>
     </div>
   </div>
 </section>
@@ -237,7 +298,7 @@
     <p class="lede reveal" style="max-width:34em">In 2026 I travelled the ancient Silk Road, visiting silk mills across <span class="em">Uzbekistan and China</span> — sitting with weavers, dyers and mill owners where the craft still lives. To lead this industry, I wanted to keep my hands in its origins.</p>
     <div class="gallery reveal">
       <figure class="plate"><span class="idx">I</span><img src="media/IMG_2335.jpg" alt="Ikat silk on the loom"><figcaption>Ikat silk on the loom — Uzbekistan</figcaption></figure>
-      <figure class="plate"><span class="idx">II</span><img src="media/IMG_2358.jpg" alt="Setting the warp by hand"><figcaption>Setting the warp by hand — Uzbekistan</figcaption></figure>
+      <figure class="plate"><span class="idx">II</span><img src="media/IMG_2358.jpg" alt="A master weaver at the warp"><figcaption>A master weaver at the warp — Uzbekistan</figcaption></figure>
       <figure class="plate"><span class="idx">III</span><img src="media/IMG_2348.jpg" alt="Pattern archives at a working mill"><figcaption>In the pattern archives — Uzbekistan</figcaption></figure>
     </div>
     <p class="note reveal">Uzbekistan, 2026 — where the silk still begins by hand.</p>
@@ -257,7 +318,7 @@
         Your browser can't play this video — <a href="media/interview_shenzhen.mp4" style="color:#DCB877">download the clip</a>.
       </video>
       <div class="rec-txt">
-        <p class="lede">Invited by the <span class="em">Shenzhen Textile Association</span> and interviewed on television — a sign of the trust this industry places in cross-cultural expertise.</p>
+        <p class="lede">Invited by the <span class="em">Shenzhen Textile Association</span> and interviewed on television — on how to relaunch the apparel industry of southern China — a sign of the trust this industry places in cross-cultural expertise.</p>
         <p>The bridge I care about most is carrying the standards of European luxury into the Chinese textile world — and bringing its energy back. Being asked to speak, on camera, is a quiet confirmation that the bridge is real.</p>
         <div class="also">
           <img src="media/IMG_1919.jpg" alt="La Moda Italiana @ Almaty 2026">
@@ -282,6 +343,13 @@
         <p class="viewsrc big">↗ <a href="index.html" target="_blank">Don't take my word for it — view the source.</a></p>
       </div>
       <div>
+        <div class="storecard">
+          <span class="live">Live</span>
+          <div class="se">Phygital Retail · Built by me</div>
+          <h3>Carrera VR Store</h3>
+          <p>A virtual 3D shop where buyers walk the space and purchase brands in total autonomy — a working digital twin for retail. Not a mock-up: it's live, and I designed and built it.</p>
+          <a class="go" href="https://carrera-vr-store.netlify.app/" target="_blank" rel="noopener">Enter the store ↗</a>
+        </div>
         <div class="chips">
           <span class="chip"><b>Coding</b> · self-taught</span>
           <span class="chip"><b>AI</b> · sales automation</span>
