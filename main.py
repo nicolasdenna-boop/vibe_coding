@@ -573,26 +573,35 @@ def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
         "leadership, networking, people management, business development, "
         "and organizational transformation - and is specifically drawn to "
         "high-responsibility, high-challenge roles rather than steady-state "
-        "management. Score these categories HIGHLY:\n"
-        "1. Senior sales/commercial leadership roles specifically at TEXTILE "
-        "manufacturers, mills, or textile divisions - this is a top priority "
-        "given the candidate's deep textile industry background.\n"
-        "2. Corporate sourcing, supply chain, or procurement leadership "
-        "roles at FASHION or apparel companies - even though these aren't "
-        "classic 'sales' titles, the candidate's production and supply-chain "
-        "expertise makes strong sourcing/procurement leadership roles a "
-        "genuine fit, not a mismatch.\n"
-        "3. Private Equity roles (Operating Partner, Portfolio Operations, "
-        "Commercial Due Diligence) and especially Venture Capital roles "
-        "focused on scaling startups (Operating Partner, Portfolio "
-        "Operations) - the candidate is specifically drawn to VC/startup "
-        "environments for the ownership and challenge involved.\n"
-        "4. Non-Executive Director / Board roles in fashion, luxury, or "
-        "textile companies.\n"
-        "Score roles outside commercial leadership, general management, "
-        "business development, sourcing/supply chain leadership, or PE/VC "
-        "low (under 30), even if the job title superficially contains a "
-        "matching keyword."
+        "management. INDUSTRY MATCH IS A HARD REQUIREMENT FOR A HIGH SCORE - "
+        "a generic 'Sales Director' or 'Commercial Director' title at a "
+        "company with NO connection to textile, fashion, apparel, luxury, "
+        "or PE/VC (e.g. software, insurance, telecom, industrial equipment, "
+        "generic B2B) must NOT score highly just because the job title "
+        "matches - the underlying industry/company must also fit. Use these "
+        "score bands:\n"
+        "70-100: Senior sales/commercial leadership specifically at TEXTILE "
+        "manufacturers, mills, or textile divisions (top priority given the "
+        "candidate's deep textile background); OR corporate sourcing, supply "
+        "chain, or procurement leadership at FASHION/apparel companies (not "
+        "a classic 'sales' title, but a genuine fit given the candidate's "
+        "production/supply-chain expertise); OR Private Equity roles "
+        "(Operating Partner, Portfolio Operations, Commercial Due Diligence) "
+        "or Venture Capital roles focused on scaling startups (the "
+        "candidate is specifically drawn to VC/startup ownership and "
+        "challenge); OR Non-Executive Director/Board roles at fashion, "
+        "luxury, or textile companies.\n"
+        "30-55: Senior commercial/sales leadership at luxury, fashion, or "
+        "general consumer-goods companies that are NOT textile-specific - "
+        "still relevant to the candidate's background, but a secondary "
+        "priority behind the textile/sourcing/PE-VC categories above.\n"
+        "0-25: Everything else, INCLUDING generic commercial, sales, "
+        "business development, or general management roles at companies "
+        "with no discernible connection to textile, fashion, apparel, "
+        "luxury, or PE/VC - even senior, well-matched-sounding titles like "
+        "'VP Sales' or 'Chief Commercial Officer' belong here if the "
+        "company/industry doesn't fit. Do not let title seniority alone "
+        "pull a job into a higher band."
     )
 
 
@@ -693,7 +702,10 @@ async def rank_jobs(payload: RankRequest) -> dict:
         return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
 
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
-    scored_jobs = [j for j in scored_jobs if j["score"] > 0]  # drop language/relevance mismatches
+    # Drop language mismatches (scored 0) and generic/off-industry matches
+    # (scored under 30 per the prompt's relevance bands) - only genuinely
+    # textile/fashion/luxury/PE-VC relevant roles should ever be returned.
+    scored_jobs = [j for j in scored_jobs if j["score"] >= 30]
     scored_jobs.sort(key=lambda job: job["score"], reverse=True)
     return {"count": len(scored_jobs), "jobs": scored_jobs}
 
