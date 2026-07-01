@@ -16,6 +16,10 @@ positioning by *being* hand-built.
   - `IMG_1919.jpg` — the "La Moda Italiana @ Almaty" poster.
 
 ## Check / personalise
+- **Add your portrait (high impact):** drop a photo at `media/portrait.jpg`
+  (roughly 4:5 portrait). It appears automatically in the "turning point"
+  section; until then an elegant "ND" monogram shows in its place. A strong,
+  human portrait is the single most memorable element you can add.
 - **Interview topic:** the poster card and text say *"heritage and the future of
   textile."* If the interview was about something more specific, edit the
   `<div class="sub">` in `interview_poster` wording and the copy in the

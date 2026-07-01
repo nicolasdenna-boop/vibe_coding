@@ -39,7 +39,8 @@
   #loom{position:absolute; inset:0; width:100%; height:100%; z-index:0}
   .hero-inner{position:relative; z-index:2; width:100%}
   .hero .eyebrow{margin-bottom:26px}
-  .hero h1{font-size:clamp(46px,9vw,104px); letter-spacing:-.01em; font-weight:500}
+  .hero h1{font-size:clamp(30px,5vw,58px); letter-spacing:-.01em; font-weight:500; max-width:16em}
+  .hero h1 em{font-style:italic; color:var(--ink)}
   .hero h1 .l2{display:block; font-style:italic; color:var(--accent-dk); font-weight:400}
   .hero .tag{margin-top:22px; font-size:clamp(16px,2vw,21px); color:var(--muted); max-width:30em; font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(20px,2.4vw,26px)}
   .hero .thesis{margin-top:30px; font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:clamp(19px,2.4vw,26px); color:var(--ink)}
@@ -135,6 +136,23 @@
   .contact .meta{margin-top:40px; font-size:13.5px; color:var(--muted); letter-spacing:.04em}
   footer{padding:34px 0; text-align:center; font-size:12px; color:var(--faint); letter-spacing:.1em}
 
+  /* memorable-pass additions */
+  .hero .creds{margin-top:32px; font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  .turn{display:grid; grid-template-columns:290px 1fr; gap:58px; align-items:center}
+  .portrait{position:relative; aspect-ratio:4/5; border:1px solid var(--line); background:var(--bg2); overflow:hidden; border-radius:2px}
+  .portrait img{width:100%; height:100%; object-fit:cover; display:block}
+  .portrait .mono{position:absolute; inset:0; display:none; align-items:center; justify-content:center; font-family:"Playfair Display",Georgia,serif; font-size:66px; color:var(--line); letter-spacing:.06em}
+  .portrait.empty .mono{display:flex}
+  .portrait.empty:after{content:"add portrait.jpg"; position:absolute; bottom:14px; left:0; right:0; text-align:center; font-size:10.5px; letter-spacing:.16em; color:var(--faint); text-transform:uppercase}
+  .turn-txt p{font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(20px,2.3vw,25px); line-height:1.5; color:#3a342c; margin-bottom:12px}
+  .turn-txt p.big{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:clamp(24px,3.1vw,36px); line-height:1.24; color:var(--ink); margin:18px 0}
+  .turn-txt .sig{margin-top:20px; font-size:14px; letter-spacing:.03em; color:var(--accent-dk); font-weight:600; font-family:system-ui,sans-serif}
+  .cc-headline{font-family:"Playfair Display",Georgia,serif; font-style:italic; font-size:clamp(22px,3vw,32px); color:var(--ink); margin:0 0 20px; line-height:1.3}
+  .cc-headline b{font-style:normal; color:var(--accent-dk)}
+  .viewsrc.big{font-size:15px; margin-top:22px}
+  .invite{font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(20px,2.4vw,26px); color:#3a342c; max-width:24em; margin:22px auto 0; line-height:1.5}
+  @media(max-width:760px){ .turn{grid-template-columns:1fr; gap:28px} .portrait{max-width:240px; margin:0 auto} }
+
   @media(max-width:760px){
     .stats{grid-template-columns:repeat(2,1fr)}
     .gallery{grid-template-columns:1fr 1fr}
@@ -150,19 +168,27 @@
 <header class="hero">
   <canvas id="loom"></canvas>
   <div class="hero-inner wrap">
-    <span class="eyebrow reveal">Luxury Fashion &middot; High-End Textile</span>
-    <h1 class="reveal" style="transition-delay:.08s">Nicolas Denna<span class="l2 serif">strategic commercial leadership</span></h1>
-    <p class="tag reveal" style="transition-delay:.16s">Fifteen years building the commercial heart of luxury textile, in Europe and Asia — most recently as Commercial Director at Hermès.</p>
+    <span class="eyebrow reveal">Nicolas Denna &middot; Luxury Textile &amp; Technology</span>
+    <h1 class="reveal" style="transition-delay:.08s">I ran the commercial engine of <em>Hermès</em> textile.<span class="l2 serif">Then I taught myself to code.</span></h1>
+    <p class="tag reveal" style="transition-delay:.16s">Fifteen years protecting the soul of luxury textile — now fusing that craft with AI, and building the bridge myself.</p>
     <p class="thesis reveal" style="transition-delay:.24s">Keep the know-how. <b>Make it shine.</b></p>
+    <div class="creds reveal" style="transition-delay:.32s">Ex-Hermès Commercial Director &nbsp;·&nbsp; Interviewed on Chinese television &nbsp;·&nbsp; Global MBA in AI</div>
   </div>
   <div class="scrollcue"><span>Scroll</span><span class="bar"></span></div>
 </header>
 
 <!-- ================= STATEMENT ================= -->
 <section class="statement">
-  <div class="wrap reveal">
-    <p>I have spent my career translating extraordinary craft into commercial performance — and I now bring technology to the loom, without ever losing the hand that makes it.</p>
-    <div class="sig">A commercial leader on the <b>Executive Committee</b> of Hermès Textile Division, now completing a Global MBA in <b>AI &amp; Entrepreneurship</b>.</div>
+  <div class="wrap turn reveal">
+    <div class="portrait">
+      <img src="media/portrait.jpg" alt="Nicolas Denna" onerror="this.style.display='none';this.parentElement.classList.add('empty')">
+      <span class="mono">ND</span>
+    </div>
+    <div class="turn-txt">
+      <p>For six years I ran the commercial engine at the summit of luxury textile — Hermès, the Executive Committee, eight factories, a business built on the finest craft in the world.</p>
+      <p class="big">Then I walked away — to learn what AI would do to this world, and to find where technology meets the loom.</p>
+      <div class="sig">I didn't leave the craft. I left to give it a future.</div>
+    </div>
   </div>
 </section>
 
@@ -251,20 +277,17 @@
     </div>
     <div class="cc-grid reveal">
       <div>
-        <p>The MBA was deliberate. I could see AI reshaping every industry, and I wanted to be fluent in it — not as a spectator, but as a builder. <span class="em">So I learned to code.</span></p>
-        <p>At Brand Selection I designed and built a phygital sales process, including a digital-twin 3D gallery for a hybrid purchase journey. This very page is hand-written — a small proof that the craft-and-technology bridge is real, not rhetorical.</p>
+        <p class="cc-headline">And this site? I coded <b>every thread of it</b> — the weave, the motion, the words. By hand.</p>
+        <p>That's the whole point. I could see AI reshaping every industry, so I didn't just study it — I learned to build. At Brand Selection I designed a phygital sales process with a digital-twin 3D showroom. Here, I wanted proof you could touch: the bridge between craft and technology, built by the same person who ran the commercial floor at Hermès.</p>
+        <p class="viewsrc big">↗ <a href="index.html" target="_blank">Don't take my word for it — view the source.</a></p>
       </div>
       <div>
         <div class="chips">
           <span class="chip"><b>Coding</b> · self-taught</span>
           <span class="chip"><b>AI</b> · sales automation</span>
           <span class="chip">Digital-twin / <b>3D</b></span>
-          <span class="chip">Phygital retail</span>
-          <span class="chip">Data analysis</span>
-          <span class="chip">CRM &amp; ERP</span>
           <span class="chip">Global MBA · <b>AI</b></span>
         </div>
-        <p class="viewsrc">↗ <a href="index.html" target="_blank">This site was hand-coded — view the source.</a></p>
       </div>
     </div>
   </div>
@@ -274,7 +297,8 @@
 <section class="contact">
   <div class="wrap reveal">
     <span class="eyebrow">Let's talk</span>
-    <h2 class="serif">Where heritage meets what's next.</h2>
+    <h2 class="serif">I'm looking for my next chapter.</h2>
+    <p class="invite">To lead the commercial future of a house — or a venture — that wants to modernize without losing its soul. If that sounds like you, let's talk.</p>
     <div class="row">
       <a class="btn solid" href="CV_Nicolas_Denna_2026_Master.pdf" target="_blank">Download CV</a>
       <a class="btn ghost" href="mailto:nicolas_denna@hotmail.com">Email me</a>
@@ -327,32 +351,35 @@ function animNum(el){
   size(); addEventListener('resize',size);
   cv.parentElement.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect(); mouse.x=e.clientX-r.left; mouse.y=e.clientY-r.top;});
   cv.parentElement.addEventListener('mouseleave',()=>{mouse.x=mouse.y=-999;});
-  let ph=0;
+  let ph=0, t0=performance.now();
   function draw(){
     ph+=0.006;
+    // weave-in: threads draw themselves over ~2.2s on load (the signature)
+    const g=Math.min(1, (performance.now()-t0)/2200);
+    const ease=1-Math.pow(1-g,3);
     cx.clearRect(0,0,cv.offsetWidth,cv.offsetHeight);
-    const w=cv.offsetWidth, h=cv.offsetHeight, R=150;
-    // warp (vertical)
+    const w=cv.offsetWidth, h=cv.offsetHeight, R=160, wy=h*ease, wx=w*ease;
+    // warp (vertical) — grows top→down
     for(const bx of warp){
       cx.beginPath();
-      for(let y=0;y<=h;y+=6){
+      for(let y=0;y<=wy;y+=6){
         const dx=bx-mouse.x, dy=y-mouse.y, d=Math.hypot(dx,dy);
-        let off=Math.sin(y*0.012+ph+bx*0.01)*2.2;
-        if(d<R){ off += (dx/d)*(1-d/R)*16; }
+        let off=Math.sin(y*0.012+ph+bx*0.01)*2.4;
+        if(d<R){ off += (dx/d)*(1-d/R)*18; }
         cx.lineTo(bx+off, y);
       }
-      cx.strokeStyle=ACCENT+'0.09)'; cx.lineWidth=1; cx.stroke();
+      cx.strokeStyle=ACCENT+'0.11)'; cx.lineWidth=1; cx.stroke();
     }
-    // weft (horizontal)
+    // weft (horizontal) — grows left→right
     for(const by of weft){
       cx.beginPath();
-      for(let x=0;x<=w;x+=6){
+      for(let x=0;x<=wx;x+=6){
         const dx=x-mouse.x, dy=by-mouse.y, d=Math.hypot(dx,dy);
-        let off=Math.cos(x*0.012+ph+by*0.01)*2.2;
-        if(d<R){ off += (dy/d)*(1-d/R)*16; }
+        let off=Math.cos(x*0.012+ph+by*0.01)*2.4;
+        if(d<R){ off += (dy/d)*(1-d/R)*18; }
         cx.lineTo(x, by+off);
       }
-      cx.strokeStyle=ACCENT+'0.07)'; cx.lineWidth=1; cx.stroke();
+      cx.strokeStyle=ACCENT+'0.09)'; cx.lineWidth=1; cx.stroke();
     }
     requestAnimationFrame(draw);
   }
