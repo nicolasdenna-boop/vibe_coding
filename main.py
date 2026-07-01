@@ -4,6 +4,8 @@ import logging
 import os
 import random
 import re
+import time
+import uuid
 from datetime import date
 from html import unescape
 
@@ -757,9 +759,8 @@ async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[
     return scored_jobs
 
 
-@app.post("/rank")
-async def rank_jobs(payload: RankRequest) -> dict:
-    jobs = await _fetch_all_jobs(role=payload.role)
+async def _run_rank(cv: str, role: str) -> dict:
+    jobs = await _fetch_all_jobs(role=role)
     if not jobs:
         return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
 
@@ -769,13 +770,70 @@ async def rank_jobs(payload: RankRequest) -> dict:
         # always Adzuna over Jooble/SerpAPI) - fair sampling across sources.
         random.shuffle(jobs)
         jobs = jobs[:MAX_JOBS_FOR_SCORING]
-    scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
+    scored_jobs = await _score_jobs_with_gemini(jobs, cv, role)
     # Only drop clear non-fits and language mismatches (score < 15 per the
     # prompt's relevance bands) - biased toward inclusion so plausible
     # opportunities aren't lost, even if industry fit is uncertain.
     scored_jobs = [j for j in scored_jobs if j["score"] >= 15]
     scored_jobs.sort(key=lambda job: job["score"], reverse=True)
     return {"count": len(scored_jobs), "jobs": scored_jobs}
+
+
+@app.post("/rank")
+async def rank_jobs(payload: RankRequest) -> dict:
+    """Synchronous version - kept for direct testing, but a large search can
+    take long enough to exceed a typical platform request timeout. Prefer
+    POST /rank/start + GET /rank/status/{job_id} for real frontend use."""
+    return await _run_rank(payload.cv, payload.role)
+
+
+# ============================================================
+# Async job version of /rank - returns immediately with a job_id instead of
+# blocking on the full search+score pipeline, which can take long enough
+# (large multi-source fan-out + several Gemini batches) to exceed a
+# platform's request timeout regardless of how much the pipeline itself is
+# optimized. The frontend should call /rank/start then poll
+# /rank/status/{job_id} until status is "done" or "error".
+# ============================================================
+
+_RANK_JOBS: dict[str, dict] = {}
+_RANK_JOB_TTL_SECONDS = 3600
+
+
+def _cleanup_old_rank_jobs() -> None:
+    cutoff = time.time() - _RANK_JOB_TTL_SECONDS
+    for job_id in [jid for jid, job in _RANK_JOBS.items() if job["created_at"] < cutoff]:
+        del _RANK_JOBS[job_id]
+
+
+async def _run_rank_job(job_id: str, cv: str, role: str) -> None:
+    try:
+        result = await _run_rank(cv, role)
+        _RANK_JOBS[job_id].update(status="done", result=result)
+    except HTTPException as exc:
+        _RANK_JOBS[job_id].update(status="error", error=str(exc.detail))
+    except Exception as exc:
+        logger.exception("Unhandled error in rank job %s", job_id)
+        _RANK_JOBS[job_id].update(status="error", error=str(exc))
+
+
+@app.post("/rank/start")
+async def rank_start(payload: RankRequest) -> dict:
+    """Kick off a search+score job in the background and return immediately."""
+    _cleanup_old_rank_jobs()
+    job_id = uuid.uuid4().hex
+    _RANK_JOBS[job_id] = {"status": "pending", "created_at": time.time()}
+    asyncio.create_task(_run_rank_job(job_id, payload.cv, payload.role))
+    return {"job_id": job_id, "status": "pending"}
+
+
+@app.get("/rank/status/{job_id}")
+async def rank_status(job_id: str) -> dict:
+    """Poll this until status is "done" (result available) or "error"."""
+    job = _RANK_JOBS.get(job_id)
+    if job is None:
+        raise HTTPException(status_code=404, detail="Unknown job_id")
+    return job
 
 
 import pathlib
