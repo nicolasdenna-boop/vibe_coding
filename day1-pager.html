@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7-Day Outreach — Action Pager</title>
+<style>
+  :root{
+    --bg:#0f1226; --bg2:#171a3a; --card:#1e2148; --card2:#252a5c;
+    --ink:#eef0ff; --muted:#9aa0d0; --line:#2e3470;
+    --accent:#7c6cff; --accent2:#31d0aa; --gold:#ffcf5c; --pink:#ff7ac6;
+    --done:#31d0aa;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#f3f2fb; --bg2:#e9e8f7; --card:#ffffff; --card2:#f6f5ff;
+      --ink:#1b1d3a; --muted:#5c608c; --line:#e2e0f2; --accent:#6a5aff; --done:#12b28c; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%, var(--bg2), var(--bg)) fixed;
+    color:var(--ink); line-height:1.5; -webkit-font-smoothing:antialiased;
+    padding:18px; max-width:760px; margin:0 auto;
+  }
+  h1{font-size:22px; margin:0 0 2px}
+  .sub{color:var(--muted); font-size:13px; margin:0 0 16px}
+  /* sticky progress header */
+  .hud{
+    position:sticky; top:8px; z-index:20; background:var(--card);
+    border:1px solid var(--line); border-radius:18px; padding:14px 16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.18); margin-bottom:18px;
+  }
+  .hud-top{display:flex; align-items:center; justify-content:space-between; gap:12px}
+  .pct{font-size:30px; font-weight:800; letter-spacing:-.5px}
+  .pct small{font-size:14px; color:var(--muted); font-weight:600}
+  .stage{font-size:13px; color:var(--muted); text-align:right}
+  .stage b{color:var(--ink)}
+  .bar{height:14px; background:var(--bg); border-radius:99px; overflow:hidden; margin-top:12px; border:1px solid var(--line)}
+  .bar > i{display:block; height:100%; width:0%;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:99px;
+    transition:width .6s cubic-bezier(.2,.9,.2,1)}
+  .controls{display:flex; gap:8px; margin-top:12px; flex-wrap:wrap}
+  .btn{font:inherit; font-size:12px; cursor:pointer; border:1px solid var(--line);
+    background:var(--card2); color:var(--muted); padding:6px 12px; border-radius:99px}
+  .btn:hover{color:var(--ink)}
+  /* day cards */
+  details{background:var(--card); border:1px solid var(--line); border-radius:16px;
+    margin-bottom:12px; overflow:hidden}
+  details[open]{box-shadow:0 6px 20px rgba(0,0,0,.12)}
+  summary{list-style:none; cursor:pointer; padding:16px 18px; display:flex;
+    align-items:center; gap:12px; user-select:none}
+  summary::-webkit-details-marker{display:none}
+  .chev{transition:transform .2s; color:var(--muted); font-size:13px}
+  details[open] .chev{transform:rotate(90deg)}
+  .daytag{font-size:11px; font-weight:800; letter-spacing:.5px; color:#fff;
+    background:linear-gradient(135deg,var(--accent),var(--pink)); padding:4px 9px; border-radius:8px}
+  .dtitle{font-weight:700; flex:1}
+  .dtitle span{display:block; font-size:12px; color:var(--muted); font-weight:500}
+  .dcount{font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
+  .dcount.complete{color:var(--done); font-weight:800}
+  .group{padding:2px 18px 14px}
+  .glabel{font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.6px;
+    color:var(--muted); margin:14px 0 6px}
+  /* task rows */
+  label.task{display:flex; gap:12px; align-items:flex-start; padding:11px 12px;
+    border-radius:12px; cursor:pointer; transition:background .15s}
+  label.task:hover{background:var(--card2)}
+  label.task input{position:absolute; opacity:0; pointer-events:none}
+  .box{flex:0 0 auto; width:24px; height:24px; border-radius:8px; border:2px solid var(--line);
+    display:grid; place-items:center; margin-top:1px; transition:all .2s; background:var(--bg)}
+  .box svg{width:15px; height:15px; stroke:#fff; stroke-width:3.5; fill:none;
+    stroke-dasharray:24; stroke-dashoffset:24; transition:stroke-dashoffset .25s .05s}
+  .task input:checked ~ .box{background:var(--done); border-color:var(--done); transform:scale(1.05)}
+  .task input:checked ~ .box svg{stroke-dashoffset:0}
+  .ttext{flex:1; font-size:15px; transition:opacity .2s}
+  .ttext small{display:block; color:var(--muted); font-size:12.5px; margin-top:1px}
+  .task input:checked ~ .ttext{opacity:.5}
+  .task input:checked ~ .ttext > span:first-child{text-decoration:line-through}
+  /* toast */
+  #toast{position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(30px);
+    background:var(--ink); color:var(--bg); padding:12px 20px; border-radius:99px; font-weight:700;
+    font-size:15px; opacity:0; pointer-events:none; transition:all .35s cubic-bezier(.2,.9,.2,1);
+    box-shadow:0 12px 30px rgba(0,0,0,.3); z-index:60; max-width:88vw; text-align:center}
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  #cfx{position:fixed; inset:0; pointer-events:none; z-index:50}
+  .foot{color:var(--muted); font-size:12px; text-align:center; margin:22px 0 8px}
+  .foot a{color:var(--accent)}
+</style>
+</head>
+<body>
+
+<h1>🎯 7-Day Outreach — Action Pager</h1>
+<p class="sub">Tick a box the moment you finish it. Each one is a small win worth celebrating. Progress saves automatically.</p>
+
+<div class="hud">
+  <div class="hud-top">
+    <div class="pct"><span id="pctNum">0</span><small>%</small></div>
+    <div class="stage">
+      <div><b id="doneNum">0</b> / <span id="totNum">0</span> steps done</div>
+      <div id="stageMsg">🌱 Every journey starts with one tick.</div>
+    </div>
+  </div>
+  <div class="bar"><i id="barFill"></i></div>
+  <div class="controls">
+    <button class="btn" id="soundBtn">🔊 Sound: on</button>
+    <button class="btn" id="collapseBtn">📂 Expand all</button>
+    <button class="btn" id="resetBtn">↺ Reset progress</button>
+  </div>
+</div>
+
+<div id="days"></div>
+
+<p class="foot">Companion to <b>outreach-strategy-7-day-plan.md</b> · openers in <b>tier1-openers.md</b> &amp; the enriched workbook.<br>Made to keep you moving. One tick at a time. ✨</p>
+
+<canvas id="cfx"></canvas>
+<div id="toast"></div>
+
+<script>
+// ---------- The plan ----------
+const PLAN = [
+ {day:"DAY 1", title:"Foundation & assets", note:"3–4 h · all prep, zero outreach · open front and center",
+  groups:[
+    {label:"A · LinkedIn Premium (30 min)", tasks:[
+      ["Start Sales Navigator Core trial","or Premium Business — better for outbound to named people"],
+      ["Set “Open to work” → recruiters only","not the public green banner"],
+      ["Note your InMail credit count","spend them only on Tier 1"],
+    ]},
+    {label:"B · Polish your profile (60–90 min)", tasks:[
+      ["Rewrite headline as positioning","e.g. “Commercial/GM leadership in Textile & Fashion”"],
+      ["Rewrite About = 3 short paragraphs","who you run, results, what’s next"],
+      ["Pin 2–3 Featured proof items","a deck, a result, an article"],
+      ["Refresh banner + professional headshot",""],
+      ["Add 2–3 quantified wins per role","revenue, market entry, margin, team"],
+    ]},
+    {label:"C · Write reusable blocks (60 min)", tasks:[
+      ["Write your [2] YOU block ×3 flavours","headhunter · investor/startup · association"],
+      ["Write your [3] ASK + [4] NEXT lines",""],
+      ["Save them one-paste-away","note app or the tracker"],
+    ]},
+    {label:"D · Booking link (15 min)", tasks:[
+      ["Set up a free Calendly link",""],
+      ["Paste the link into every template","a “yes” now costs zero admin"],
+    ]},
+  ]},
+ {day:"DAY 2", title:"Tier & enrich the list", note:"2–3 h · prep",
+  groups:[{label:"Prep", tasks:[
+    ["Use the enriched workbook (already built)","or add Tier/Channel/Status columns yourself"],
+    ["Confirm every row is tagged Tier 1/2/3",""],
+    ["Find the named human at all 16 Tier-1 firms","the partner who runs the practice, in your region"],
+    ["Review the 16 pre-written Tier-1 openers","already in tier1-openers.md"],
+  ]}]},
+ {day:"DAY 3", title:"Tier 1 — head-hunters & PE", note:"1.5–2 h · your highest-value day",
+  groups:[{label:"Send (16)", tasks:[
+    ["Send the 6 exec-search openers",""],
+    ["Send the 6 board/PE openers",""],
+    ["Send the 4 PE-fund openers","use your Hermès / France-Italy leverage"],
+    ["Bundle the big-company ask into each","“consider me for mandates at [company]”"],
+    ["Log every one in the tracker",""],
+  ]}]},
+ {day:"DAY 4", title:"Regional recruiters", note:"1.5 h · batch by region",
+  groups:[{label:"Send (~20–30 of 51)", tasks:[
+    ["Message recruiters in your priority regions first","Italy, Switzerland, France, Dubai, USA…"],
+    ["Skip “no specialist found” regions unless a real target",""],
+    ["Log all sent",""],
+  ]}]},
+ {day:"DAY 5", title:"Investors & startups", note:"1.5–2 h · batch by category",
+  groups:[{label:"Send (~15–20 of 44)", tasks:[
+    ["Send all VC messages in one sitting","ask for a portfolio intro / advisory"],
+    ["Send all startup messages in one sitting","offer commercial / go-to-market help"],
+    ["Log all sent",""],
+  ]}]},
+ {day:"DAY 6", title:"Associations, fairs & chambers", note:"1.5 h · get involved, don’t pitch",
+  groups:[{label:"Reach out (~12)", tasks:[
+    ["Contact 6–8 associations/fairs that match you","how to get involved / attend / member intros"],
+    ["Contact the relevant chambers","membership + events + jobs board"],
+    ["Register for the next relevant fair","one floor = dozens of warm chats"],
+    ["Join NACD for board-director visibility",""],
+  ]}]},
+ {day:"DAY 7", title:"Follow-up system & review", note:"1.5 h · turn this into a machine",
+  groups:[{label:"Close the loop", tasks:[
+    ["Set follow-up dates for everyone contacted","7–10 days out; one follow-up then Closed"],
+    ["Reply same-day to anyone who responded","send the calendar link"],
+    ["Review the funnel: sent / replied / meetings",""],
+    ["Book 2 recurring 30-min blocks/week",""],
+  ]}]},
+];
+
+// ---------- Celebration copy (symbolic) ----------
+const CHEERS = ["✨ Nice.","🔥 Momentum!","🌱 Growing.","💪 Yes!","⚡ Sharp.","🎯 On target.",
+  "🚀 Onward.","🧭 Progress.","🌟 Well done.","👏 That counts.","🪴 One more root down.","💎 Solid."];
+const DAYDONE = ["🏆","🎉","🥂","🌅","🔓","⛰️"];
+const STAGES = [
+  [0,"🌱 Every journey starts with one tick."],
+  [10,"🌿 It’s taking shape."],
+  [25,"🔥 A quarter down — real momentum."],
+  [50,"⛰️ Halfway. The hard part is behind prep."],
+  [75,"🚀 Home stretch — keep the rhythm."],
+  [95,"🌟 Almost there."],
+  [100,"🏆 Done. You built the machine — go get those meetings."],
+];
+
+// ---------- Render ----------
+const KEY="outreach7day.v1";
+let state = JSON.parse(localStorage.getItem(KEY) || "{}");
+const daysEl = document.getElementById("days");
+let allIds=[], dayMeta=[];
+PLAN.forEach((d,di)=>{
+  const det=document.createElement("details"); if(di===0) det.open=true;
+  const ids=[];
+  let inner=`<summary><span class="chev">▶</span><span class="daytag">${d.day}</span>
+    <span class="dtitle">${d.title}<span>${d.note}</span></span>
+    <span class="dcount" data-day="${di}"></span></summary>`;
+  d.groups.forEach(g=>{
+    inner+=`<div class="group"><div class="glabel">${g.label}</div>`;
+    g.tasks.forEach((t,ti)=>{
+      const id=`d${di}g${g.label.length}t${ti}_${t[0].length}`;
+      ids.push(id); allIds.push(id);
+      const ck=state[id]?"checked":"";
+      inner+=`<label class="task"><input type="checkbox" id="${id}" ${ck}>
+        <span class="box"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,5"/></svg></span>
+        <span class="ttext"><span>${t[0]}</span>${t[1]?`<small>${t[1]}</small>`:""}</span></label>`;
+    });
+    inner+=`</div>`;
+  });
+  det.innerHTML=inner; daysEl.appendChild(det);
+  dayMeta.push({di,ids,el:det.querySelector(`.dcount[data-day="${di}"]`), title:d.day});
+});
+
+// ---------- Audio (tiny synth, no files) ----------
+let soundOn=true, actx=null;
+function chime(win){
+  if(!soundOn) return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const notes = win ? [523,659,784,1047] : [660,880];
+    notes.forEach((f,i)=>{
+      const o=actx.createOscillator(), g=actx.createGain();
+      o.type="sine"; o.frequency.value=f;
+      const t=actx.currentTime + i*(win?0.09:0.05);
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(win?0.22:0.15,t+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.35);
+      o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.4);
+    });
+  }catch(e){}
+}
+
+// ---------- Confetti ----------
+const cv=document.getElementById("cfx"), cx=cv.getContext("2d");
+let parts=[]; function fit(){cv.width=innerWidth;cv.height=innerHeight;} fit(); addEventListener("resize",fit);
+const COL=["#7c6cff","#31d0aa","#ffcf5c","#ff7ac6","#5ad1ff","#ffffff"];
+function burst(x,y,n){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2, sp=4+Math.random()*7;
+    parts.push({x,y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp-4,g:0.22+Math.random()*0.1,
+      s:5+Math.random()*6,rot:Math.random()*6,vr:(-.3+Math.random()*.6),
+      c:COL[(Math.random()*COL.length)|0],life:60+Math.random()*30,age:0});
+  }
+  if(!raf) loop();
+}
+let raf=null;
+function loop(){
+  raf=requestAnimationFrame(loop); cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.age<p.life);
+  parts.forEach(p=>{
+    p.age++; p.vy+=p.g; p.x+=p.vx; p.y+=p.vy; p.rot+=p.vr;
+    cx.save(); cx.translate(p.x,p.y); cx.rotate(p.rot);
+    cx.globalAlpha=Math.max(0,1-p.age/p.life); cx.fillStyle=p.c;
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*0.6); cx.restore();
+  });
+  if(!parts.length){cancelAnimationFrame(raf);raf=null;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+// ---------- Toast ----------
+let tTimer=null; const toast=document.getElementById("toast");
+function say(msg){ toast.textContent=msg; toast.classList.add("show");
+  clearTimeout(tTimer); tTimer=setTimeout(()=>toast.classList.remove("show"),1600); }
+
+// ---------- Progress ----------
+function stageFor(p){ let s=STAGES[0][1]; for(const[t,m]of STAGES){ if(p>=t)s=m; } return s; }
+function refresh(){
+  const done=allIds.filter(id=>state[id]).length, tot=allIds.length;
+  const pct=Math.round(done/tot*100);
+  document.getElementById("pctNum").textContent=pct;
+  document.getElementById("doneNum").textContent=done;
+  document.getElementById("totNum").textContent=tot;
+  document.getElementById("barFill").style.width=pct+"%";
+  document.getElementById("stageMsg").textContent=stageFor(pct);
+  dayMeta.forEach(m=>{
+    const dn=m.ids.filter(id=>state[id]).length;
+    const done=dn===m.ids.length;
+    m.el.textContent = done ? `✓ ${dn}/${m.ids.length}` : `${dn}/${m.ids.length}`;
+    m.el.classList.toggle("complete",done);
+  });
+}
+refresh();
+
+// ---------- Interactions ----------
+daysEl.addEventListener("change",e=>{
+  if(e.target.type!=="checkbox")return;
+  const id=e.target.id, on=e.target.checked;
+  if(on){ state[id]=1; } else { delete state[id]; }
+  localStorage.setItem(KEY,JSON.stringify(state));
+  if(on){
+    const r=e.target.nextElementSibling.getBoundingClientRect();
+    const x=r.left+r.width/2, y=r.top+r.height/2;
+    // did this finish a whole day?
+    const m=dayMeta.find(m=>m.ids.includes(id));
+    const dayDone = m && m.ids.every(i=>state[i]);
+    const allDone = allIds.every(i=>state[i]);
+    if(allDone){
+      say("🏆 ALL 7 DAYS COMPLETE — the machine is built!");
+      chime(true);
+      [[.2,.3],[.5,.2],[.8,.3],[.35,.5],[.65,.5]].forEach(([fx,fy],k)=>
+        setTimeout(()=>burst(innerWidth*fx,innerHeight*fy,70),k*180));
+    } else if(dayDone){
+      const em=DAYDONE[m.di%DAYDONE.length];
+      say(`${em} ${m.title} complete — that’s a real milestone!`);
+      chime(true);
+      burst(x,y,55); setTimeout(()=>burst(innerWidth/2,innerHeight*0.35,60),160);
+    } else {
+      say(CHEERS[(Math.random()*CHEERS.length)|0]);
+      chime(false); burst(x,y,26);
+    }
+  }
+  refresh();
+});
+
+// ---------- Buttons ----------
+document.getElementById("soundBtn").onclick=e=>{
+  soundOn=!soundOn; e.target.textContent=`🔊 Sound: ${soundOn?"on":"off"}`;
+  if(soundOn) chime(false);
+};
+let expanded=false;
+document.getElementById("collapseBtn").onclick=e=>{
+  expanded=!expanded;
+  document.querySelectorAll("details").forEach(d=>d.open=expanded);
+  e.target.textContent = expanded ? "📁 Collapse all" : "📂 Expand all";
+};
+document.getElementById("resetBtn").onclick=()=>{
+  if(!confirm("Reset all progress? This clears every tick."))return;
+  state={}; localStorage.removeItem(KEY);
+  document.querySelectorAll("input[type=checkbox]").forEach(c=>c.checked=false);
+  refresh(); say("↺ Fresh start. Go get the first win.");
+};
+</script>
+</body>
+</html>
