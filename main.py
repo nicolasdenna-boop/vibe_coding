@@ -573,35 +573,31 @@ def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
         "leadership, networking, people management, business development, "
         "and organizational transformation - and is specifically drawn to "
         "high-responsibility, high-challenge roles rather than steady-state "
-        "management. INDUSTRY MATCH IS A HARD REQUIREMENT FOR A HIGH SCORE - "
-        "a generic 'Sales Director' or 'Commercial Director' title at a "
-        "company with NO connection to textile, fashion, apparel, luxury, "
-        "or PE/VC (e.g. software, insurance, telecom, industrial equipment, "
-        "generic B2B) must NOT score highly just because the job title "
-        "matches - the underlying industry/company must also fit. Use these "
-        "score bands:\n"
+        "management. Industry match matters, but ERR ON THE SIDE OF "
+        "INCLUSION - this candidate would rather see a plausible opportunity "
+        "than miss it, so only push a score to the bottom band if the role "
+        "is clearly a poor fit (wrong function entirely, e.g. an engineering "
+        "or accounting role). Use these score bands:\n"
         "70-100: Senior sales/commercial leadership specifically at TEXTILE "
         "manufacturers, mills, or textile divisions (top priority given the "
         "candidate's deep textile background); OR corporate sourcing, supply "
-        "chain, or procurement leadership at FASHION/apparel companies (not "
-        "a classic 'sales' title, but a genuine fit given the candidate's "
-        "production/supply-chain expertise); OR Private Equity roles "
-        "(Operating Partner, Portfolio Operations, Commercial Due Diligence) "
-        "or Venture Capital roles focused on scaling startups (the "
-        "candidate is specifically drawn to VC/startup ownership and "
-        "challenge); OR Non-Executive Director/Board roles at fashion, "
+        "chain, or procurement leadership at FASHION/apparel companies; OR "
+        "Private Equity roles (Operating Partner, Portfolio Operations, "
+        "Commercial Due Diligence) or Venture Capital roles focused on "
+        "scaling startups; OR Non-Executive Director/Board roles at fashion, "
         "luxury, or textile companies.\n"
-        "30-55: Senior commercial/sales leadership at luxury, fashion, or "
-        "general consumer-goods companies that are NOT textile-specific - "
-        "still relevant to the candidate's background, but a secondary "
-        "priority behind the textile/sourcing/PE-VC categories above.\n"
-        "0-25: Everything else, INCLUDING generic commercial, sales, "
-        "business development, or general management roles at companies "
-        "with no discernible connection to textile, fashion, apparel, "
-        "luxury, or PE/VC - even senior, well-matched-sounding titles like "
-        "'VP Sales' or 'Chief Commercial Officer' belong here if the "
-        "company/industry doesn't fit. Do not let title seniority alone "
-        "pull a job into a higher band."
+        "40-69: Senior commercial/sales/BD leadership at luxury, fashion, or "
+        "general consumer-goods companies that are NOT textile-specific, OR "
+        "at diversified industrial/manufacturing companies where a textile "
+        "or adjacent product line is plausible, OR general senior "
+        "sales/commercial/BD leadership roles that don't clearly rule out "
+        "relevance - when in doubt, place a role here rather than lower.\n"
+        "15-39: Roles where the industry fit is unclear or likely weak but "
+        "not implausible - still worth surfacing as a lower-priority option "
+        "rather than hiding it entirely.\n"
+        "0-14: Reserve for roles that are clearly NOT a fit at all - wrong "
+        "function (e.g. engineering, accounting, IT, junior/entry-level), "
+        "or an explicit language mismatch."
     )
 
 
@@ -702,10 +698,10 @@ async def rank_jobs(payload: RankRequest) -> dict:
         return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
 
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
-    # Drop language mismatches (scored 0) and generic/off-industry matches
-    # (scored under 30 per the prompt's relevance bands) - only genuinely
-    # textile/fashion/luxury/PE-VC relevant roles should ever be returned.
-    scored_jobs = [j for j in scored_jobs if j["score"] >= 30]
+    # Only drop clear non-fits and language mismatches (score < 15 per the
+    # prompt's relevance bands) - biased toward inclusion so plausible
+    # opportunities aren't lost, even if industry fit is uncertain.
+    scored_jobs = [j for j in scored_jobs if j["score"] >= 15]
     scored_jobs.sort(key=lambda job: job["score"], reverse=True)
     return {"count": len(scored_jobs), "jobs": scored_jobs}
 
