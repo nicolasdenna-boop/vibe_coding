@@ -35,7 +35,8 @@
           "specialty": "Luxury retail & fashion executive search",
           "notes": "Specialists in high fashion, ready-to-wear, premium brands"
         }
-      ]
+      ],
+      "continent": "North America"
     },
     {
       "region": "USA — Furniture & Home Furnishings",
@@ -65,7 +66,8 @@
           "specialty": "Commercial interiors, luxury home furnishings sales",
           "notes": "40 years experience, IIDA/NEWH member network"
         }
-      ]
+      ],
+      "continent": "North America"
     },
     {
       "region": "Italy — Fashion, Textile, Luxury (Milan)",
@@ -107,7 +109,8 @@
           "specialty": "Fashion, Luxury & Design executive search",
           "notes": "40+ years specialized in the fashion industry, offices in Milan and Venice"
         }
-      ]
+      ],
+      "continent": "Europe"
     },
     {
       "region": "Spain — Luxury, Fashion, Retail (Barcelona HQ, pan-European)",
@@ -119,7 +122,8 @@
           "specialty": "Luxury, Fashion, Retail, Hospitality, FMCG executive & middle-management search",
           "notes": "Barcelona HQ since 2009, offices in Madrid, Paris, Milan, Munich, Amsterdam, Braga; international job offers page covers many countries"
         }
-      ]
+      ],
+      "continent": "Europe"
     },
     {
       "region": "Turkey — Textile, Manufacturing, Executive",
@@ -149,7 +153,8 @@
           "specialty": "Luxury and consumer goods",
           "notes": "Istanbul office of the US-based ACCUR network"
         }
-      ]
+      ],
+      "continent": "Europe/Asia (Transcontinental)"
     },
     {
       "region": "Dubai / UAE — Luxury & Retail",
@@ -185,7 +190,8 @@
           "specialty": "Dedicated Luxury jobs vertical",
           "notes": "Global recruitment consultancy with UAE-specific luxury listings"
         }
-      ]
+      ],
+      "continent": "Middle East"
     },
     {
       "region": "Uzbekistan — General Executive (no dedicated fashion/luxury specialists found)",
@@ -209,7 +215,8 @@
           "specialty": "Top management search",
           "notes": "Large local database (~91,000 candidates)"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "Hong Kong — General Executive & Retail (no dedicated fashion/luxury specialists found)",
@@ -227,7 +234,8 @@
           "specialty": "Cross-industry executive search",
           "notes": "No API; contact/CV submission only"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "China — General Executive & Retail (no dedicated fashion/luxury specialists found)",
@@ -245,7 +253,8 @@
           "specialty": "Cross-industry, C-level search",
           "notes": "No API; contact/CV submission only"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "Thailand — General Executive (no dedicated fashion/luxury specialists found)",
@@ -257,7 +266,8 @@
           "specialty": "Retail, consumer, sales & marketing",
           "notes": "No API; contact/CV submission only"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "Vietnam — General Executive (no dedicated fashion/luxury specialists found)",
@@ -269,7 +279,8 @@
           "specialty": "Cross-industry executive search, largest local firm",
           "notes": "No API; contact/CV submission only"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "Kazakhstan — General Executive",
@@ -287,7 +298,8 @@
           "specialty": "Cross-industry executive search",
           "notes": "No public API for jobs; hh.kz (below) is the actual API source for KZ listings"
         }
-      ]
+      ],
+      "continent": "Asia"
     },
     {
       "region": "Switzerland — Luxury, Watches & Jewelry",
@@ -305,7 +317,8 @@
           "specialty": "Luxury goods executive search",
           "notes": "No API; contact/CV submission only"
         }
-      ]
+      ],
+      "continent": "Europe"
     },
     {
       "region": "France — Fashion Capital",
@@ -323,7 +336,8 @@
           "specialty": "Luxury conglomerate HQ",
           "notes": "Proprietary careers site, no public API"
         }
-      ]
+      ],
+      "continent": "Europe"
     },
     {
       "region": "Israel — Executive Search (general, no dedicated fashion/luxury specialists found)",
@@ -346,6 +360,97 @@
           "url": "https://hunter.co.il/en",
           "specialty": "Cross-industry executive search and global recruitment",
           "notes": "Leading Israeli executive search firm"
+        }
+      ],
+      "continent": "Middle East"
+    },
+    {
+      "region": "Portugal — Textile Manufacturing (High-Quality, Technical Textiles)",
+      "continent": "Europe",
+      "countryCode": "PT",
+      "agencies": [
+        {
+          "name": "Headhunter Portugal (Textile practice)",
+          "url": "https://headhunter-portugal.com/l/textile.htm",
+          "specialty": "Textile, fashion, technical textiles executive search",
+          "notes": "Dedicated textile vertical of a Portugal-based executive search firm"
+        },
+        {
+          "name": "Robert Breitbach Consulting (Lisbon office)",
+          "url": "https://18.breitbach.com/",
+          "specialty": "Textile & Fashion Industries, technical and executive-level search",
+          "notes": "Retained international search firm since 1993; offices in Germany, US, Spain, Portugal, Estonia"
+        }
+      ]
+    },
+    {
+      "region": "South Asia — Textile & Apparel Manufacturing (India, Bangladesh, Pakistan, Sri Lanka, Nepal)",
+      "continent": "Asia",
+      "countryCode": "IN",
+      "agencies": [
+        {
+          "name": "Career Pakistan",
+          "url": "https://www.careerpakistan.pk/",
+          "specialty": "CEO/CXO/Head of Department-level headhunting across South Asia",
+          "notes": "Covers Pakistan, India, Bangladesh, Sri Lanka, Nepal - single-focus headhunting firm"
+        },
+        {
+          "name": "BrightPath Associates",
+          "url": "https://brightpathassociates.com/textile-industry/",
+          "specialty": "Textile industry executive search",
+          "notes": "10+ years hands-on textile sector experience across India, Bangladesh, Vietnam, Europe, USA"
+        }
+      ]
+    },
+    {
+      "region": "Egypt & North Africa — Executive Search",
+      "continent": "Africa",
+      "countryCode": "EG",
+      "agencies": [
+        {
+          "name": "Spider",
+          "url": "https://www.spiderx.com/",
+          "specialty": "Executive search & selection across emerging industry sectors",
+          "notes": "Egypt's leading Executive Search firm, est. 2005, covers Middle East & Africa"
+        }
+      ]
+    },
+    {
+      "region": "Sub-Saharan & Pan-Africa — Manufacturing Executive Search",
+      "continent": "Africa",
+      "countryCode": "ZA",
+      "agencies": [
+        {
+          "name": "CA Global",
+          "url": "https://www.caglobalint.com/board-level-executive-search-and-re/",
+          "specialty": "Board-level and C-level executive search, including Manufacturing",
+          "notes": "Coverage across Eastern, Western, Northern, and Southern Africa"
+        }
+      ]
+    },
+    {
+      "region": "Brazil & South America — Textile & Apparel",
+      "continent": "South America",
+      "countryCode": "BR",
+      "agencies": [
+        {
+          "name": "Talentor Brazil (Vertico)",
+          "url": "https://talentor.com/l/talentor-brazil-vertico",
+          "specialty": "Executive search, South America regional partner network",
+          "notes": "Part of the global Talentor International network; Sao Paulo-based"
+        }
+      ]
+    },
+    {
+      "region": "Australia & Oceania — Textile & Apparel (no dedicated local specialist found)",
+      "continent": "Oceania",
+      "countryCode": "AU",
+      "agencies": [
+        {
+          "name": "See Global Textile & Apparel Executive Search below",
+          "url": "",
+          "specialty": "No Australia/Oceania-specific textile boutique firm was found",
+          "notes": "Global firms below (Lordstone, JMJ Phillip) state Asia-Pacific coverage that may include this market - worth contacting directly to confirm"
         }
       ]
     }
@@ -479,6 +584,44 @@
       "name": "Kazakhstan Light Industry Association",
       "url": "https://kzlegprom.kz",
       "notes": "Kazakhstan's national association covering textile and light manufacturing"
+    }
+  ],
+  "globalTextileExecutiveSearch": [
+    {
+      "name": "Robert Breitbach Consulting",
+      "url": "https://18.breitbach.com/",
+      "specialty": "Textile & Fashion Industries, technical and executive-level search",
+      "notes": "Retained international search firm since 1993, covering Europe, Middle East, India, North America; offices in Germany, US, Spain, Portugal, Estonia"
+    },
+    {
+      "name": "Coley Company",
+      "url": "https://coleycompany.net/",
+      "specialty": "Textile, apparel, and nonwovens recruiting, senior executive to management levels",
+      "notes": "30+ years specialized textile recruitment; placements span USA, Israel, Germany, Belgium, France, China, India, Pakistan, Mexico"
+    },
+    {
+      "name": "Lordstone Corporation",
+      "url": "https://www.lordstonecorp.com/practice-areas/textiles-manufacturing-executive-search-firms.html",
+      "specialty": "Textile manufacturing executive search (fabric, yarn, thread mill operations)",
+      "notes": "Global reach: Canada, Europe, Asia Pacific, Middle East, Africa, South and Central America"
+    },
+    {
+      "name": "JMJ Phillip",
+      "url": "https://jmjphillip.com/industries/textiles-executive-search-firm/",
+      "specialty": "Manufacturing, supply chain, and technology executive search, including textiles",
+      "notes": "Global executive search firm, Detroit HQ with multiple US offices"
+    },
+    {
+      "name": "Precision Placements (textilejobs.com)",
+      "url": "https://www.textilejobs.com/",
+      "specialty": "Textile & apparel executive search - VP, President, CEO, COO roles",
+      "notes": "25+ years specialized; named USA Textiles & Apparel Recruitment Company of the Year 2024 (Corporate Vision Magazine)"
+    },
+    {
+      "name": "Rush & Company",
+      "url": "https://www.rushandcompany.com/",
+      "specialty": "Fiber, Fabric, and Fashion Industries executive search - Sales, Sourcing, Merchandising, C-level",
+      "notes": "Founded 2003 (President recruiting in the industry since 1994); entry-level through C-level placements"
     }
   ]
 }
