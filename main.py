@@ -1,6 +1,7 @@
 import asyncio
+import json
+import os
 import re
-from collections import Counter
 from html import unescape
 
 import httpx
@@ -31,23 +32,11 @@ GREENHOUSE_BOARDS = [
 ]
 GREENHOUSE_URL = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
 
-_STOPWORDS = {
-    "the", "and", "for", "with", "this", "that", "from", "your", "you", "are",
-    "have", "will", "our", "a", "an", "in", "on", "at", "of", "to", "is", "as",
-    "or", "be", "we", "by", "it", "its", "all", "who", "you'll", "you're",
-    "their", "them", "into", "such", "than", "then", "also", "can", "we're",
-    "role", "job", "team", "work", "years", "including", "across", "within",
-    "new", "one", "more", "about", "using", "other", "any", "not", "but",
-    "has", "was", "were", "been", "being", "they", "his", "her", "she", "him",
-}
-
-
-def _tokenize(text: str) -> list[str]:
-    return [
-        word
-        for word in re.findall(r"[a-zA-Z]+", (text or "").lower())
-        if len(word) > 2 and word not in _STOPWORDS
-    ]
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
+GEMINI_BATCH_SIZE = 25
+GEMINI_CONCURRENCY = 5
+GEMINI_DESCRIPTION_CHARS = 600
 
 
 def _strip_html(html: str) -> str:
@@ -102,78 +91,114 @@ async def get_jobs() -> dict:
 
 
 class RankRequest(BaseModel):
-    cv_text: str = Field(..., min_length=1, description="Plain text of the candidate's CV")
-    target_role: str = Field(..., min_length=1, description="The role the candidate is looking for")
-    top_n: int | None = Field(None, gt=0, description="Only return the top N ranked jobs")
+    cv: str = Field(..., min_length=1, description="Plain text of the candidate's CV")
+    role: str = Field(..., min_length=1, description="The role the candidate wants")
 
 
-def _document_frequency(jobs: list[dict]) -> Counter:
-    """Count, across all jobs, how many postings each keyword appears in."""
-    doc_freq: Counter = Counter()
-    for job in jobs:
-        words = set(_tokenize(job.get("title"))) | set(_tokenize(job.get("description")))
-        doc_freq.update(words)
-    return doc_freq
+def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
+    listing = [
+        {
+            "index": i,
+            "title": job.get("title"),
+            "company": job.get("company"),
+            "location": job.get("location"),
+            "description": (job.get("description") or "")[:GEMINI_DESCRIPTION_CHARS],
+        }
+        for i, job in enumerate(batch)
+    ]
+    return (
+        "You are a recruiting assistant. Score how well each job listing fits the "
+        "candidate, given their CV and the role they want.\n\n"
+        f"CANDIDATE CV:\n{cv}\n\n"
+        f"TARGET ROLE:\n{role}\n\n"
+        f"JOBS:\n{json.dumps(listing)}\n\n"
+        "For every job in JOBS, return its index, a fit score from 0 to 100 "
+        "(100 = perfect fit), and a short one-sentence reason for the score that "
+        "references the candidate's CV and/or target role."
+    )
 
 
-def _distinctive_keywords(keywords: set[str], doc_freq: Counter, total_jobs: int, max_ratio: float = 0.5) -> set[str]:
-    """Drop keywords so generic (present in most postings) that they carry no signal."""
-    if not total_jobs:
-        return keywords
-    return {word for word in keywords if doc_freq.get(word, 0) / total_jobs <= max_ratio}
+_GEMINI_RESPONSE_SCHEMA = {
+    "type": "ARRAY",
+    "items": {
+        "type": "OBJECT",
+        "properties": {
+            "index": {"type": "INTEGER"},
+            "score": {"type": "INTEGER"},
+            "reason": {"type": "STRING"},
+        },
+        "required": ["index", "score", "reason"],
+    },
+}
 
 
-def _score_job(job: dict, role_keywords: set[str], cv_keywords: set[str], target_role: str) -> tuple[int, str]:
-    title_words = set(_tokenize(job.get("title")))
-    job_words = title_words | set(_tokenize(job.get("description")))
+async def _score_batch(
+    client: httpx.AsyncClient,
+    api_key: str,
+    cv: str,
+    role: str,
+    batch: list[dict],
+    semaphore: asyncio.Semaphore,
+) -> list[dict]:
+    payload = {
+        "contents": [{"parts": [{"text": _build_prompt(cv, role, batch)}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "response_schema": _GEMINI_RESPONSE_SCHEMA,
+        },
+    }
 
-    # Role fit is judged by the job title only - matching the target role against
-    # the free-text description would score unrelated jobs highly just because
-    # words like "sales" show up somewhere in almost every posting.
-    role_matches = role_keywords & title_words
-    cv_matches = cv_keywords & job_words
+    async with semaphore:
+        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+    response.raise_for_status()
+    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    results = json.loads(text)
 
-    role_ratio = len(role_matches) / len(role_keywords) if role_keywords else 0.0
-    cv_ratio = len(cv_matches) / len(cv_keywords) if cv_keywords else 0.0
-
-    score = min(100, round(role_ratio * 65 + cv_ratio * 35))
-
-    reason_parts = []
-    if role_matches:
-        reason_parts.append(
-            f"title matches target role '{target_role}' on: {', '.join(sorted(role_matches)[:5])}"
-        )
-    if cv_matches:
-        reason_parts.append(f"overlaps with your CV background in: {', '.join(sorted(cv_matches)[:5])}")
-    reason = "; ".join(reason_parts) if reason_parts else "little overlap with your CV or target role"
-
-    return score, reason
-
-
-@app.post("/jobs/rank")
-async def rank_jobs(payload: RankRequest) -> dict:
-    """Rank all fetched jobs by how well they fit the given CV and target role."""
-    jobs = await _fetch_all_jobs()
-    doc_freq = _document_frequency(jobs)
-
-    role_keywords = set(_tokenize(payload.target_role))
-    cv_counts = Counter(_tokenize(payload.cv_text))
-    cv_keywords = {word for word, _ in cv_counts.most_common(50)} - role_keywords
-    cv_keywords = _distinctive_keywords(cv_keywords, doc_freq, len(jobs))
-
-    ranked = []
-    for job in jobs:
-        score, reason = _score_job(job, role_keywords, cv_keywords, payload.target_role)
-        ranked.append(
+    scored = []
+    for item in results:
+        index = item.get("index")
+        if not isinstance(index, int) or not (0 <= index < len(batch)):
+            continue
+        job = batch[index]
+        scored.append(
             {
-                **{k: v for k, v in job.items() if k != "description"},
-                "score": score,
-                "reason": reason,
+                "title": job.get("title"),
+                "company": job.get("company"),
+                "location": job.get("location"),
+                "apply_url": job.get("apply_url"),
+                "score": item.get("score", 0),
+                "reason": item.get("reason", ""),
             }
         )
+    return scored
 
-    ranked.sort(key=lambda job: job["score"], reverse=True)
-    if payload.top_n:
-        ranked = ranked[: payload.top_n]
 
-    return {"count": len(ranked), "jobs": ranked}
+async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[dict]:
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY environment variable is not set")
+
+    batches = [jobs[i : i + GEMINI_BATCH_SIZE] for i in range(0, len(jobs), GEMINI_BATCH_SIZE)]
+    semaphore = asyncio.Semaphore(GEMINI_CONCURRENCY)
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        results = await asyncio.gather(
+            *(_score_batch(client, api_key, cv, role, batch, semaphore) for batch in batches),
+            return_exceptions=True,
+        )
+
+    scored_jobs: list[dict] = []
+    for result in results:
+        if isinstance(result, Exception):
+            raise HTTPException(status_code=502, detail=f"Gemini scoring failed: {result}")
+        scored_jobs.extend(result)
+    return scored_jobs
+
+
+@app.post("/rank")
+async def rank_jobs(payload: RankRequest) -> dict:
+    """Rank all fetched jobs by how well they fit the given CV and target role, using Gemini."""
+    jobs = await _fetch_all_jobs()
+    scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
+    scored_jobs.sort(key=lambda job: job["score"], reverse=True)
+    return {"count": len(scored_jobs), "jobs": scored_jobs}
