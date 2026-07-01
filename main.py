@@ -563,3 +563,295 @@ async def get_recruiters() -> dict:
     if not RECRUITERS_PATH.exists():
         raise HTTPException(status_code=404, detail="recruiters.json not found next to main.py")
     return json.loads(RECRUITERS_PATH.read_text())
+
+
+# ============================================================
+# Job-alert scanning (fully separate from /rank and /recruiters).
+#
+# Periodically (or on demand via /scan-and-alert) searches major job
+# platforms for senior Textile, Sales/Commercial, Board/NED, and
+# Fashion-Tech-commercial roles worldwide, using SerpAPI's "site:" search
+# instead of scraping (scraping LinkedIn/Indeed directly would violate
+# their Terms of Service — SerpAPI legitimately indexes their public
+# pages). A lightweight Gemini pass filters the raw search snippets down
+# to real, current, senior postings, then a digest is emailed via
+# SendGrid. See README.md for how to point a hosting platform's cron
+# scheduler at POST /scan-and-alert.
+# ============================================================
+
+SERPAPI_URL = "https://serpapi.com/search"
+SENDGRID_URL = "https://api.sendgrid.com/v3/mail/send"
+
+PLATFORM_SITES = [
+    "linkedin.com/jobs",
+    "indeed.com",
+    "glassdoor.com",
+    "monster.com",
+    "bayt.com",
+    "naukri.com",
+    "jobstreet.com",
+    "wellfound.com",  # formerly AngelList Talent — startup-heavy
+    "builtin.com",  # startup/tech-heavy, under-indexed on general boards
+]
+
+WATCH_QUERIES = [
+    # Textile / Sales & Commercial / Board
+    "Textile Director",
+    "Textile Commercial Director",
+    "VP Sales luxury",
+    "Chief Commercial Officer fashion",
+    "Sales Director luxury goods",
+    "Non-Executive Director fashion",
+    "Board Member textile",
+    "Board Member luxury goods",
+    # Fashion Tech / Textile Tech — commercial track only, early-stage
+    # startups anywhere in the world. Deliberately excludes product,
+    # engineering, design, and operations roles at these same companies.
+    "Head of Sales fashion tech startup",
+    "VP Business Development textile technology",
+    "Chief Commercial Officer fashion tech",
+    "Commercial Director textile innovation",
+    "Head of Sales sustainable materials startup",
+    "Business Development Director digital fashion",
+    "Commercial Lead supply chain traceability fashion",
+]
+
+ALERT_CATEGORIES = ["Textile", "Sales & Commercial", "Board", "Fashion Tech"]
+
+SCAN_CONCURRENCY = 10
+SCAN_RESULTS_PER_QUERY = 20
+SCAN_BATCH_SIZE = 30
+
+
+async def search_job_platforms(client: httpx.AsyncClient, query: str, site: str) -> list[dict]:
+    """Search one job platform for a query via SerpAPI's site: operator (not scraping)."""
+    api_key = os.environ.get("SERPAPI_KEY")
+    if not api_key:
+        return []
+
+    response = await client.get(
+        SERPAPI_URL,
+        params={
+            "engine": "google",
+            "q": f"site:{site} {query}",
+            "api_key": api_key,
+            "num": SCAN_RESULTS_PER_QUERY,
+        },
+    )
+    response.raise_for_status()
+    data = response.json()
+    hits = []
+    for item in data.get("organic_results", []):
+        hits.append(
+            {
+                "title": item.get("title"),
+                "link": item.get("link"),
+                "snippet": item.get("snippet"),
+                "platform": site,
+            }
+        )
+    return hits
+
+
+async def _run_platform_scan() -> list[dict]:
+    semaphore = asyncio.Semaphore(SCAN_CONCURRENCY)
+
+    async def _throttled(client: httpx.AsyncClient, query: str, site: str):
+        async with semaphore:
+            return await search_job_platforms(client, query, site)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        tasks = [_throttled(client, query, site) for query in WATCH_QUERIES for site in PLATFORM_SITES]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    hits: list[dict] = []
+    for result in results:
+        if isinstance(result, Exception):
+            logger.warning("A platform scan call failed: %s", result)
+            continue
+        hits.extend(result)
+
+    # De-duplicate by link since the same posting often surfaces under
+    # several overlapping queries
+    seen = set()
+    deduped = []
+    for hit in hits:
+        link = hit.get("link")
+        if not link or link in seen:
+            continue
+        seen.add(link)
+        deduped.append(hit)
+
+    return deduped
+
+
+def _build_scan_filter_prompt(batch: list[dict]) -> str:
+    listing = [
+        {
+            "title": hit.get("title"),
+            "snippet": hit.get("snippet"),
+            "link": hit.get("link"),
+            "platform": hit.get("platform"),
+        }
+        for hit in batch
+    ]
+    categories = ", ".join(ALERT_CATEGORIES)
+    return (
+        "You are screening raw Google search results (title + snippet + link) "
+        "for a job alert digest. These are search snippets, not full job "
+        "descriptions, so use judgement.\n\n"
+        f"RESULTS:\n{json.dumps(listing)}\n\n"
+        "Keep ONLY results that are clearly a real, currently open, senior-level "
+        "job posting (not a news article, blog post, old/expired listing, "
+        "junior/mid-level role, or an unrelated search result) that falls into "
+        f"one of these categories: {categories}.\n\n"
+        "Category definitions:\n"
+        "- Textile: senior commercial, sales, or general-management roles at "
+        "textile manufacturers, mills, or textile divisions of larger "
+        "companies.\n"
+        "- Sales & Commercial: VP/Director/Chief-level sales, commercial, or "
+        "business development roles in luxury goods, fashion, or apparel.\n"
+        "- Board: Non-Executive Director, Board Member, or Board Advisor "
+        "positions in fashion, luxury, or textile companies.\n"
+        "- Fashion Tech: COMMERCIAL-TRACK ROLES ONLY (Head of Sales, VP "
+        "Business Development, Chief Commercial Officer, Commercial Director) "
+        "at startups or scale-ups building technology for fashion, apparel, or "
+        "textiles - e.g. smart/sustainable materials, textile recycling tech, "
+        "3D/digital fashion design tools, supply chain traceability, "
+        "AI-driven design or merchandising, fashion resale/rental platforms, "
+        "made-to-measure/on-demand manufacturing tech. Do NOT include product, "
+        "engineering, design, or operations roles in this category, even at "
+        "the same companies.\n\n"
+        "For each result you keep, return: title, your best guess at the "
+        "company name (company_guess), the link, the platform, the category "
+        f"(exactly one of {categories}), and a one-sentence reason it "
+        "qualifies (one_line_reason). Drop everything else - do not return an "
+        "entry for rejected results."
+    )
+
+
+_SCAN_FILTER_SCHEMA = {
+    "type": "ARRAY",
+    "items": {
+        "type": "OBJECT",
+        "properties": {
+            "title": {"type": "STRING"},
+            "company_guess": {"type": "STRING"},
+            "link": {"type": "STRING"},
+            "platform": {"type": "STRING"},
+            "category": {"type": "STRING", "enum": ALERT_CATEGORIES},
+            "one_line_reason": {"type": "STRING"},
+        },
+        "required": ["title", "company_guess", "link", "platform", "category", "one_line_reason"],
+    },
+}
+
+
+async def _filter_scan_batch(
+    client: httpx.AsyncClient, api_key: str, batch: list[dict], semaphore: asyncio.Semaphore
+) -> list[dict]:
+    payload = {
+        "contents": [{"parts": [{"text": _build_scan_filter_prompt(batch)}]}],
+        "generationConfig": {
+            "response_mime_type": "application/json",
+            "response_schema": _SCAN_FILTER_SCHEMA,
+        },
+    }
+    async with semaphore:
+        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+    response.raise_for_status()
+    text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
+    return json.loads(text)
+
+
+async def _filter_scan_results(hits: list[dict]) -> list[dict]:
+    if not hits:
+        return []
+
+    api_key = os.environ.get("GEMINI_API_KEY")
+    if not api_key:
+        raise HTTPException(status_code=500, detail="GEMINI_API_KEY environment variable is not set")
+
+    batches = [hits[i : i + SCAN_BATCH_SIZE] for i in range(0, len(hits), SCAN_BATCH_SIZE)]
+    semaphore = asyncio.Semaphore(GEMINI_CONCURRENCY)
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        results = await asyncio.gather(
+            *(_filter_scan_batch(client, api_key, batch, semaphore) for batch in batches),
+            return_exceptions=True,
+        )
+
+    filtered: list[dict] = []
+    for result in results:
+        if isinstance(result, Exception):
+            logger.warning("A scan filter batch failed: %s", result)
+            continue
+        filtered.extend(result)
+    return filtered
+
+
+def _build_digest_html(jobs: list[dict]) -> str:
+    by_category: dict[str, list[dict]] = {}
+    for job in jobs:
+        by_category.setdefault(job.get("category", "Other"), []).append(job)
+
+    sections = []
+    for category in ALERT_CATEGORIES:
+        category_jobs = by_category.get(category, [])
+        if not category_jobs:
+            continue
+        items = "".join(
+            f"<li><a href=\"{job['link']}\">{job['title']}</a> "
+            f"&mdash; {job.get('company_guess', '')} ({job['platform']})<br>"
+            f"<small>{job.get('one_line_reason', '')}</small></li>"
+            for job in category_jobs
+        )
+        sections.append(f"<h2>{category}</h2><ul>{items}</ul>")
+
+    if not sections:
+        return "<p>No new matching roles found in this scan.</p>"
+    return "".join(sections)
+
+
+async def _send_digest_email(client: httpx.AsyncClient, jobs: list[dict]) -> None:
+    api_key = os.environ.get("SENDGRID_API_KEY")
+    to_email = os.environ.get("ALERT_EMAIL_TO")
+    from_email = os.environ.get("ALERT_EMAIL_FROM")
+    if not (api_key and to_email and from_email):
+        raise HTTPException(
+            status_code=500,
+            detail="SENDGRID_API_KEY, ALERT_EMAIL_TO, and ALERT_EMAIL_FROM must all be set",
+        )
+
+    payload = {
+        "personalizations": [{"to": [{"email": to_email}]}],
+        "from": {"email": from_email},
+        "subject": f"Job alert digest — {len(jobs)} role(s) found",
+        "content": [{"type": "text/html", "value": _build_digest_html(jobs)}],
+    }
+    response = await client.post(
+        SENDGRID_URL,
+        headers={"Authorization": f"Bearer {api_key}"},
+        json=payload,
+    )
+    response.raise_for_status()
+
+
+@app.get("/scan-preview")
+async def scan_preview() -> dict:
+    """Run the search + filter pipeline and return matches without emailing anyone."""
+    hits = await _run_platform_scan()
+    jobs = await _filter_scan_results(hits)
+    return {"raw_hits": len(hits), "matches": len(jobs), "jobs": jobs}
+
+
+@app.post("/scan-and-alert")
+async def scan_and_alert() -> dict:
+    """Run the full pipeline (search -> filter -> email) and return a summary."""
+    hits = await _run_platform_scan()
+    jobs = await _filter_scan_results(hits)
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        await _send_digest_email(client, jobs)
+
+    return {"raw_hits": len(hits), "matches": len(jobs), "emailed": True, "jobs": jobs}
