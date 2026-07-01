@@ -11,8 +11,12 @@ executive intake, 2026-07.*
   textile**, Europe ↔ Asia. Ex-**Hermès** Commercial Director (Executive
   Committee). Global MBA in **AI & Entrepreneurship** (Tel Aviv, 2025–26).
 - **Citizenship:** EU + Israeli. **Base:** Europe / Tel Aviv. **Available:** now.
+- **Contact:** nicolas_denna@hotmail.com · +33 6 42 93 52 54 ·
+  [linkedin.com/in/nicolas-s-denna-a2114a1](https://www.linkedin.com/in/nicolas-s-denna-a2114a1/)
 - **Languages:** Italian & French (native), English (fluent), German
   (intermediate), Japanese & Hebrew (basic).
+- **Driver:** a genuine, lifelong **passion for textile** — its craft, materials
+  and makers. This is not just a career; it's the industry he loves.
 - **Comp floor:** €120k+ base *(see note in §7 — your profile supports pushing
   well above this).*
 
@@ -31,7 +35,7 @@ plus your "freshness" — is the whole differentiator. Lead with it everywhere.
 
 1. **Commercial / General Management leadership** — CCO / Commercial Director /
    GM / MD in luxury, fashion or high-end textile *(primary)*.
-2. **Board / NED / advisory** — leveraging CAC40 Executive Committee experience.
+2. **Board / NED / advisory** — leveraging Executive Committee experience.
 3. **Lead / join a high-growth startup** — commercial leadership in
    fashion-tech, AI or advanced materials.
 
@@ -59,7 +63,7 @@ reconnected you to the next generation building this future. This reads as
 - Owned the P&L for **External Activities** — the external commercialization of
   output from **8 Hermès-owned textile factories** (finished accessories, fabric,
   semi-finished) — a **high-margin ~€10M** business, as a member of the Business
-  Unit **Executive Committee** within a **CAC 40** group.
+  Unit **Executive Committee**.
 - **Launched a new fashion textile accessories department, scaling it €100K → €2M (20×).**
 - **Redesigned the client model — concentrated accounts from ~300 to 20** —
   lifting service level and margin while cutting complexity (a deliberate
@@ -69,7 +73,7 @@ reconnected you to the next generation building this future. This reads as
 - **Cross-skilled** the team into hybrid commercial-technical roles and opened
   structured collaboration with the **Design** department.
 - **Cut cost base** (tradeshows, sampling) while protecting margin; delivered
-  **CAC 40-grade financial reporting and industrial forecasting** across 8 sites.
+  **rigorous financial reporting and industrial forecasting** across all 8 sites.
 
 **Zegna Baruffa Lane Borgosesia — Director of Sales & Mgmt, Asia (2018–2019)**
 - Led a **~€30M** Asian business across **4 offices** (China, Japan +),
@@ -141,9 +145,10 @@ Hermès" in whichever you pick.)*
 > modern management, and a real closeness to the next generation building this
 > future.
 >
-> What drives me now: taking the extraordinary **craft and know-how of this
-> industry and making it shine** — redesigning commercial functions and bringing
-> in AI and technology, without ever losing the human, heritage heart of luxury.
+> What drives me is simple: I love textile — its craft, its materials, its
+> makers. My mission now is to take the extraordinary **know-how of this industry
+> and make it shine** — redesigning commercial functions and bringing in AI and
+> technology, without ever losing the human, heritage heart of luxury.
 >
 > I'm looking for my next chapter as a **Commercial / General Management leader**
 > in luxury, fashion or high-end textile — and I'm open to **board & advisory**
