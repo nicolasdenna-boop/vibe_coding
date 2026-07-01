@@ -987,6 +987,17 @@ async def _send_top10_email(client: httpx.AsyncClient, jobs: list[dict]) -> None
     response.raise_for_status()
 
 
+@app.get("/version")
+async def version() -> dict:
+    """Reports which code commit Render actually has running - use this to
+    confirm a deploy really picked up the latest push, without relying on
+    interpreting the Render dashboard UI."""
+    return {
+        "commit": os.environ.get("RENDER_GIT_COMMIT", "unknown - not running on Render or var unset"),
+        "branch": os.environ.get("RENDER_GIT_BRANCH", "unknown"),
+    }
+
+
 @app.get("/weekly-top10-preview")
 async def weekly_top10_preview() -> dict:
     """Run search (past week only) -> filter -> rank, return the top 10 as JSON only."""
