@@ -1,19 +1,19 @@
 import asyncio
 import json
+import logging
 import os
 import re
 from html import unescape
-from pathlib import Path
 
 import httpx
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
-load_dotenv()
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger("jobmatch")
 
-app = FastAPI(title="Reeds Jobs API")
+app = FastAPI(title="JobMatch API")
 
 app.add_middleware(
     CORSMiddleware,
@@ -22,19 +22,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-GREENHOUSE_BOARDS = [
-    "riskified",
-    "fireblocks",
-    "pagayais",
-    "gongio",
-    "lightricks",
-    "similarweb",
-    "melio",
-    "wizinc",
-    "yotpo",
-    "catonetworks",
+# ============================================================
+# Greenhouse boards (direct company ATS pages)
+# NOTE: These must be luxury/fashion/textile/consumer companies
+# to matter for this app. The original list here was Israeli
+# tech/fintech boards, which is why almost every job scored
+# near-zero. Replace tokens below with real boards once you find
+# them (check a company's careers page URL - if it's
+# https://boards.greenhouse.io/{token}, that token goes here).
+# Left mostly empty on purpose rather than filled with irrelevant
+# placeholders.
+# ============================================================
+GREENHOUSE_BOARDS: list[str] = [
+    "poshmark",  # fashion resale marketplace, US
+    # Add more once verified: try https://boards-api.greenhouse.io/v1/boards/{token}/jobs
+    # in a browser — if it returns JSON with a "jobs" array, the token is valid.
 ]
 GREENHOUSE_URL = "https://boards-api.greenhouse.io/v1/boards/{token}/jobs?content=true"
+
+# ============================================================
+# Lever boards (a second common ATS, different API shape).
+# LVMH, Kering, and Richemont run proprietary careers systems and
+# are NOT on Greenhouse or Lever — no token exists for them. What
+# IS commonly on Lever are fashion-tech / marketplace / DTC brands
+# with genuine luxury-adjacent commercial roles.
+# ============================================================
+LEVER_BOARDS: list[str] = [
+    "farfetch",  # luxury fashion e-commerce, global (incl. Asia offices)
+    # Add more once verified: try https://api.lever.co/v0/postings/{token}?mode=json
+    # in a browser — if it returns a JSON array (even empty), the token is valid.
+]
+LEVER_URL = "https://api.lever.co/v0/postings/{token}?mode=json"
 
 GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
@@ -42,8 +60,39 @@ GEMINI_BATCH_SIZE = 25
 GEMINI_CONCURRENCY = 5
 GEMINI_DESCRIPTION_CHARS = 600
 
-ADZUNA_COUNTRY = "gb"
-RECRUITERS_FILE = Path(__file__).parent / "recruiters.json"
+CANDIDATE_LANGUAGES = ["English", "French", "Italian", "German", "Spanish", "Hebrew (basic)"]
+
+# Regions to exclude within France specifically (does not affect Switzerland's
+# fr_CH locale or any other market, since it's matched against location text
+# only for jobs sourced from a France-tagged source).
+FRANCE_EXCLUDED_LOCATIONS = ["paris", "lyon"]
+
+# Query expansion: for a commercial/luxury/textile CV like this one,
+# a single literal role string under-returns. We broaden the search
+# net with a handful of related titles, then let Gemini do the real
+# filtering for fit.
+ROLE_SYNONYMS = [
+    "Commercial Director",
+    "Sales Director",
+    "General Manager",
+    "Business Development Director",
+    "Country Manager",
+    "Managing Director",
+    "Non-Executive Director",
+    "Board Member",
+    "Operating Partner",
+    "Chief Commercial Officer",
+]
+INDUSTRY_KEYWORDS = ["luxury", "fashion", "textile", "private equity"]
+
+# A few dedicated, hand-picked queries for board and PE-specific searches,
+# added on top of the synonym x keyword cross-product below.
+EXTRA_QUERIES = [
+    "Non-Executive Director luxury fashion",
+    "Board Advisor consumer goods",
+    "Private Equity Portfolio Operating Partner",
+    "Private Equity Commercial Due Diligence",
+]
 
 
 def _strip_html(html: str) -> str:
@@ -51,8 +100,18 @@ def _strip_html(html: str) -> str:
     return re.sub(r"\s+", " ", unescape(text)).strip()
 
 
+def _build_queries(role: str) -> list[str]:
+    """Expand a single role string into several search queries to widen recall."""
+    queries = {role.strip()}
+    for synonym in ROLE_SYNONYMS:
+        for keyword in INDUSTRY_KEYWORDS:
+            queries.add(f"{synonym} {keyword}")
+    queries.update(EXTRA_QUERIES)
+    # Cap to keep the number of outbound API calls sane
+    return list(queries)[:14]
+
+
 async def fetch_board(client: httpx.AsyncClient, token: str) -> list[dict]:
-    """Fetch all jobs for a single Greenhouse board and tag them with the company."""
     response = await client.get(GREENHOUSE_URL.format(token=token))
     response.raise_for_status()
     data = response.json()
@@ -66,55 +125,80 @@ async def fetch_board(client: httpx.AsyncClient, token: str) -> list[dict]:
                 "apply_url": job.get("absolute_url"),
                 "company": token,
                 "description": _strip_html(job.get("content")),
+                "source": "greenhouse",
             }
         )
     return jobs
 
 
-async def fetch_adzuna(client: httpx.AsyncClient, role: str) -> list[dict]:
-    """Fetch jobs matching the target role from the Adzuna API."""
+async def fetch_lever(client: httpx.AsyncClient, token: str) -> list[dict]:
+    response = await client.get(LEVER_URL.format(token=token))
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for job in data:
+        categories = job.get("categories") or {}
+        jobs.append(
+            {
+                "title": job.get("text"),
+                "location": categories.get("location"),
+                "apply_url": job.get("hostedUrl"),
+                "company": token,
+                "description": _strip_html(job.get("descriptionPlain") or job.get("description")),
+                "source": "lever",
+            }
+        )
+    return jobs
+
+
+# --- Adzuna (broad country coverage, free tier) ---
+ADZUNA_COUNTRIES = ["us", "gb", "it", "ae", "fr", "de", "il"]  # "il" is best-effort — Adzuna's Israel coverage is unconfirmed, but the fetcher fails gracefully if unsupported
+ADZUNA_URL = "https://api.adzuna.com/v1/api/jobs/{country}/search/1"
+
+
+async def fetch_adzuna(client: httpx.AsyncClient, country: str, query: str, where: str = "") -> list[dict]:
     app_id = os.environ.get("ADZUNA_APP_ID")
     app_key = os.environ.get("ADZUNA_APP_KEY")
-    if not app_id or not app_key:
+    if not (app_id and app_key):
         return []
-
-    response = await client.get(
-        f"https://api.adzuna.com/v1/api/jobs/{ADZUNA_COUNTRY}/search/1",
-        params={
-            "app_id": app_id,
-            "app_key": app_key,
-            "what": role,
-            "results_per_page": 50,
-            "content-type": "application/json",
-        },
-    )
+    params = {
+        "app_id": app_id,
+        "app_key": app_key,
+        "results_per_page": 50 if country == "us" else 20,  # more volume in the US, as requested
+        "what": query,
+        "content-type": "application/json",
+    }
+    if where:
+        params["where"] = where
+    response = await client.get(ADZUNA_URL.format(country=country), params=params)
     response.raise_for_status()
     data = response.json()
     jobs = []
     for job in data.get("results", []):
-        company = job.get("company") or {}
-        location = job.get("location") or {}
         jobs.append(
             {
                 "title": job.get("title"),
-                "location": location.get("display_name"),
+                "location": (job.get("location") or {}).get("display_name"),
                 "apply_url": job.get("redirect_url"),
-                "company": company.get("display_name"),
+                "company": (job.get("company") or {}).get("display_name") or "Unknown",
                 "description": _strip_html(job.get("description")),
+                "source": f"adzuna_{country}" + (f"_{where}" if where else ""),
             }
         )
     return jobs
 
 
-async def fetch_reed(client: httpx.AsyncClient, role: str) -> list[dict]:
-    """Fetch jobs matching the target role from the Reed API."""
+# --- Reed (UK) ---
+REED_URL = "https://www.reed.co.uk/api/1.0/search"
+
+
+async def fetch_reed(client: httpx.AsyncClient, query: str) -> list[dict]:
     api_key = os.environ.get("REED_API_KEY")
     if not api_key:
         return []
-
     response = await client.get(
-        "https://www.reed.co.uk/api/1.0/search",
-        params={"keywords": role},
+        REED_URL,
+        params={"keywords": query, "resultsToTake": 20},
         auth=(api_key, ""),
     )
     response.raise_for_status()
@@ -126,30 +210,47 @@ async def fetch_reed(client: httpx.AsyncClient, role: str) -> list[dict]:
                 "title": job.get("jobTitle"),
                 "location": job.get("locationName"),
                 "apply_url": job.get("jobUrl"),
-                "company": job.get("employerName"),
+                "company": job.get("employerName") or "Unknown",
                 "description": _strip_html(job.get("jobDescription")),
+                "source": "reed",
             }
         )
     return jobs
 
 
-async def fetch_careerjet(client: httpx.AsyncClient, role: str) -> list[dict]:
-    """Fetch jobs matching the target role from the Careerjet API."""
-    affiliate_id = os.environ.get("CAREERJET_AFFILIATE_ID")
-    if not affiliate_id:
-        return []
+# --- Careerjet (broad locale coverage — verify each locale is supported
+# for your affiliate account at careerjet.com/partners/api) ---
+CAREERJET_URL = "https://public.api.careerjet.net/search"
+CAREERJET_LOCALES = [
+    "en_US",  # USA
+    "en_GB",  # fallback / UK
+    "it_IT",  # Italy
+    "fr_FR",  # France (candidate speaks French)
+    "de_DE",  # Germany (candidate speaks German)
+    "fr_CH",  # Switzerland (French-speaking) — Geneva luxury/watch hub
+    "de_CH",  # Switzerland (German-speaking) — Zurich
+    "tr_TR",  # Turkey
+    "ar_AE",  # UAE
+    "en_IL",  # Israel — best-effort, unconfirmed Careerjet support, fails gracefully
+]
 
-    response = await client.get(
-        "http://public-api.careerjet.net/search",
-        params={
-            "keywords": role,
-            "affid": affiliate_id,
-            "user_ip": "11.22.33.44",
-            "user_agent": "Mozilla/5.0",
-            "locale_code": "en_GB",
-        },
-    )
-    response.raise_for_status()
+
+async def fetch_careerjet(client: httpx.AsyncClient, query: str, locale: str) -> list[dict]:
+    affid = os.environ.get("CAREERJET_AFFILIATE_ID", "")
+    try:
+        response = await client.get(
+            CAREERJET_URL,
+            params={
+                "keywords": query,
+                "locale_code": locale,
+                "affid": affid,
+                "pagesize": 20,
+            },
+        )
+        response.raise_for_status()
+    except httpx.HTTPStatusError:
+        # Some locales may not be supported / may be rate-limited without an affid
+        return []
     data = response.json()
     jobs = []
     for job in data.get("jobs", []):
@@ -158,20 +259,26 @@ async def fetch_careerjet(client: httpx.AsyncClient, role: str) -> list[dict]:
                 "title": job.get("title"),
                 "location": job.get("locations"),
                 "apply_url": job.get("url"),
-                "company": job.get("company"),
+                "company": job.get("company") or "Unknown",
                 "description": _strip_html(job.get("description")),
+                "source": f"careerjet_{locale}",
             }
         )
     return jobs
 
 
-async def fetch_jooble(client: httpx.AsyncClient, role: str) -> list[dict]:
-    """Fetch jobs matching the target role from the Jooble API."""
+# --- Jooble (broadest geographic coverage, incl. many Asian/CIS markets) ---
+JOOBLE_URL = "https://jooble.org/api/{key}"
+
+
+async def fetch_jooble(client: httpx.AsyncClient, query: str, location: str = "") -> list[dict]:
     api_key = os.environ.get("JOOBLE_API_KEY")
     if not api_key:
         return []
-
-    response = await client.post(f"https://jooble.org/api/{api_key}", json={"keywords": role})
+    response = await client.post(
+        JOOBLE_URL.format(key=api_key),
+        json={"keywords": query, "location": location},
+    )
     response.raise_for_status()
     data = response.json()
     jobs = []
@@ -181,57 +288,139 @@ async def fetch_jooble(client: httpx.AsyncClient, role: str) -> list[dict]:
                 "title": job.get("title"),
                 "location": job.get("location"),
                 "apply_url": job.get("link"),
-                "company": job.get("company"),
+                "company": job.get("company") or "Unknown",
                 "description": _strip_html(job.get("snippet")),
+                "source": f"jooble_{location}" if location else "jooble",
             }
         )
     return jobs
 
 
-EXTRA_SOURCES = [
-    ("adzuna", fetch_adzuna),
-    ("reed", fetch_reed),
-    ("careerjet", fetch_careerjet),
-    ("jooble", fetch_jooble),
-]
+# --- HeadHunter Kazakhstan (hh.kz) — keyless public API ---
+HH_KZ_URL = "https://api.hh.ru/vacancies"
+HH_KZ_AREA_ID = 40  # Kazakhstan
 
 
-async def _fetch_all_jobs(role: str = "") -> list[dict]:
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        sources = list(GREENHOUSE_BOARDS)
-        tasks = [fetch_board(client, token) for token in GREENHOUSE_BOARDS]
-
-        if role:
-            for name, fetcher in EXTRA_SOURCES:
-                sources.append(name)
-                tasks.append(fetcher(client, role))
-
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-
-    jobs: list[dict] = []
-    for source, result in zip(sources, results):
-        if isinstance(result, Exception):
-            raise HTTPException(
-                status_code=502,
-                detail=f"Failed to fetch jobs for source '{source}': {result}",
-            )
-        jobs.extend(result)
+async def fetch_hh_kz(client: httpx.AsyncClient, query: str) -> list[dict]:
+    response = await client.get(
+        HH_KZ_URL,
+        params={"text": query, "area": HH_KZ_AREA_ID, "per_page": 20},
+        headers={"HH-User-Agent": "JobMatchApp/1.0 (contact@example.com)"},
+    )
+    response.raise_for_status()
+    data = response.json()
+    jobs = []
+    for item in data.get("items", []):
+        snippet = item.get("snippet") or {}
+        jobs.append(
+            {
+                "title": item.get("name"),
+                "location": (item.get("area") or {}).get("name"),
+                "apply_url": item.get("alternate_url"),
+                "company": (item.get("employer") or {}).get("name") or "Unknown",
+                "description": _strip_html(snippet.get("responsibility", "")),
+                "source": "hh_kz",
+            }
+        )
     return jobs
 
 
+async def _fetch_all_jobs(role: str = "") -> list[dict]:
+    source_semaphore = asyncio.Semaphore(20)  # cap concurrent outbound calls across all sources
+
+    async def _throttled(coro):
+        async with source_semaphore:
+            return await coro
+
+    async with httpx.AsyncClient(timeout=45.0) as client:
+        tasks: list = [fetch_board(client, token) for token in GREENHOUSE_BOARDS]
+        tasks += [fetch_lever(client, token) for token in LEVER_BOARDS]
+
+        if role:
+            queries = _build_queries(role)
+            for query in queries:
+                for country in ADZUNA_COUNTRIES:
+                    tasks.append(fetch_adzuna(client, country, query))
+                # Dedicated Abu Dhabi call so it isn't drowned out by Dubai
+                # within the general "ae" country results
+                tasks.append(fetch_adzuna(client, "ae", query, where="Abu Dhabi"))
+                tasks.append(fetch_reed(client, query))
+                tasks.append(fetch_jooble(client, query))
+                tasks.append(fetch_jooble(client, query, location="Israel"))
+                tasks.append(fetch_hh_kz(client, query))
+                for locale in CAREERJET_LOCALES:
+                    tasks.append(fetch_careerjet(client, query, locale))
+
+        results = await asyncio.gather(*(_throttled(t) for t in tasks), return_exceptions=True)
+
+    jobs: list[dict] = []
+    failures = 0
+    for result in results:
+        if isinstance(result, Exception):
+            failures += 1
+            logger.warning("A job source failed: %s", result)
+            continue
+        jobs.extend(result)
+
+    logger.info("Fetched %d jobs total (%d source calls failed/skipped)", len(jobs), failures)
+
+    # Exclude Paris and Lyon specifically within France-sourced results
+    def _is_excluded_france_job(job: dict) -> bool:
+        source = (job.get("source") or "").lower()
+        if not (source.startswith("adzuna_fr") or source == "careerjet_fr_fr"):
+            return False
+        location = (job.get("location") or "").lower()
+        return any(excluded in location for excluded in FRANCE_EXCLUDED_LOCATIONS)
+
+    jobs = [job for job in jobs if not _is_excluded_france_job(job)]
+
+    # De-duplicate by (title, company) since query expansion causes overlap
+    seen = set()
+    deduped = []
+    for job in jobs:
+        key = (job.get("title"), job.get("company"))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(job)
+
+    return deduped
+
+
 @app.get("/jobs")
-async def get_jobs() -> dict:
-    """Fetch jobs from all configured Greenhouse boards concurrently and combine them."""
-    jobs = await _fetch_all_jobs()
+async def get_jobs(role: str = "") -> dict:
+    jobs = await _fetch_all_jobs(role=role)
     public_jobs = [{k: v for k, v in job.items() if k != "description"} for job in jobs]
     return {"count": len(public_jobs), "jobs": public_jobs}
 
 
-@app.get("/recruiters")
-async def get_recruiters() -> list[dict]:
-    """Serve the static list of recruiter contacts."""
-    with open(RECRUITERS_FILE) as f:
-        return json.load(f)
+@app.get("/debug/sources")
+async def debug_sources(role: str = "Commercial Director luxury fashion") -> dict:
+    """Diagnostic endpoint: shows how many jobs each source returns for a given role."""
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        checks = {
+            "adzuna_us": fetch_adzuna(client, "us", role),
+            "adzuna_gb": fetch_adzuna(client, "gb", role),
+            "adzuna_it": fetch_adzuna(client, "it", role),
+            "adzuna_ae": fetch_adzuna(client, "ae", role),
+            "reed": fetch_reed(client, role),
+            "jooble": fetch_jooble(client, role),
+            "hh_kz": fetch_hh_kz(client, role),
+            "careerjet_it_IT": fetch_careerjet(client, role, "it_IT"),
+        }
+        for token in GREENHOUSE_BOARDS:
+            checks[f"greenhouse_{token}"] = fetch_board(client, token)
+        for token in LEVER_BOARDS:
+            checks[f"lever_{token}"] = fetch_lever(client, token)
+        results = await asyncio.gather(*checks.values(), return_exceptions=True)
+
+    summary = {}
+    for name, result in zip(checks.keys(), results):
+        if isinstance(result, Exception):
+            summary[name] = f"ERROR: {result}"
+        else:
+            summary[name] = len(result)
+    return summary
 
 
 class RankRequest(BaseModel):
@@ -255,10 +444,22 @@ def _build_prompt(cv: str, role: str, batch: list[dict]) -> str:
         "candidate, given their CV and the role they want.\n\n"
         f"CANDIDATE CV:\n{cv}\n\n"
         f"TARGET ROLE:\n{role}\n\n"
+        f"CANDIDATE LANGUAGES: {', '.join(CANDIDATE_LANGUAGES)}\n\n"
         f"JOBS:\n{json.dumps(listing)}\n\n"
         "For every job in JOBS, return its index, a fit score from 0 to 100 "
         "(100 = perfect fit), and a short one-sentence reason for the score that "
-        "references the candidate's CV and/or target role."
+        "references the candidate's CV and/or target role.\n\n"
+        "LANGUAGE RULE: If a job description explicitly requires fluency in a "
+        "language NOT in the candidate's language list (e.g. Mandarin, Cantonese, "
+        "Thai, Vietnamese, Kazakh, Turkish, Uzbek) as a mandatory qualification, "
+        "score that job 0 and state the language mismatch as the reason. Do not "
+        "penalize jobs that are silent on language requirements or that only "
+        "mention local language as 'a plus' rather than mandatory.\n\n"
+        "RELEVANCE RULE: This candidate is a senior commercial/strategy leader in "
+        "luxury fashion and textiles, not a generalist. Score roles outside "
+        "commercial leadership, general management, business development, or "
+        "luxury/fashion/textile/retail operations low (under 30), even if the "
+        "job title superficially contains a matching keyword."
     )
 
 
@@ -334,15 +535,31 @@ async def _score_jobs_with_gemini(jobs: list[dict], cv: str, role: str) -> list[
     scored_jobs: list[dict] = []
     for result in results:
         if isinstance(result, Exception):
-            raise HTTPException(status_code=502, detail=f"Gemini scoring failed: {result}")
+            logger.warning("A Gemini scoring batch failed: %s", result)
+            continue
         scored_jobs.extend(result)
     return scored_jobs
 
 
 @app.post("/rank")
 async def rank_jobs(payload: RankRequest) -> dict:
-    """Rank all fetched jobs by how well they fit the given CV and target role, using Gemini."""
-    jobs = await _fetch_all_jobs(payload.role)
+    jobs = await _fetch_all_jobs(role=payload.role)
+    if not jobs:
+        return {"count": 0, "jobs": [], "note": "No jobs fetched from any source — check /debug/sources"}
+
     scored_jobs = await _score_jobs_with_gemini(jobs, payload.cv, payload.role)
+    scored_jobs = [j for j in scored_jobs if j["score"] > 0]  # drop language/relevance mismatches
     scored_jobs.sort(key=lambda job: job["score"], reverse=True)
     return {"count": len(scored_jobs), "jobs": scored_jobs}
+
+
+import pathlib
+
+RECRUITERS_PATH = pathlib.Path(__file__).parent / "recruiters.json"
+
+
+@app.get("/recruiters")
+async def get_recruiters() -> dict:
+    if not RECRUITERS_PATH.exists():
+        raise HTTPException(status_code=404, detail="recruiters.json not found next to main.py")
+    return json.loads(RECRUITERS_PATH.read_text())

@@ -1,9 +1,466 @@
-[
-  {
-    "name": "Example Recruiter",
-    "company": "Example Talent Partners",
-    "email": "recruiter@example.com",
-    "specialty": "Luxury Retail & Fashion",
-    "region": "Europe"
-  }
-]
+{
+  "lastUpdated": "2026-07-01",
+  "regions": [
+    {
+      "region": "USA — Fashion, Luxury, Textile",
+      "countryCode": "US",
+      "agencies": [
+        {
+          "name": "ACCUR Recruiting Services",
+          "url": "https://accurservices.com",
+          "specialty": "Fashion, luxury goods, home furnishings",
+          "notes": "Forbes-ranked top executive search firm, offices in NYC/NJ, Miami, LA"
+        },
+        {
+          "name": "The Bowerman Group",
+          "url": "https://bowermangroup.com",
+          "specialty": "Luxury retail, fashion, furniture executive search",
+          "notes": "NYC-based, 10+ years in premium retail markets"
+        },
+        {
+          "name": "Keller Executive Search",
+          "url": "https://www.kellerexecutivesearch.com/industry/fashion-recruiters",
+          "specialty": "Fashion & beauty C-suite search",
+          "notes": "Global network via NPAworldwide partnership"
+        },
+        {
+          "name": "Luxe Avenue",
+          "url": "https://luxeavenue.com",
+          "specialty": "Fashion, jewelry & watches, beauty, hospitality",
+          "notes": "Executive and management search, luxury/lifestyle focus"
+        },
+        {
+          "name": "Kit Talent",
+          "url": "https://kitalent.com/luxury-retail",
+          "specialty": "Luxury retail & fashion executive search",
+          "notes": "Specialists in high fashion, ready-to-wear, premium brands"
+        }
+      ]
+    },
+    {
+      "region": "USA — Furniture & Home Furnishings",
+      "countryCode": "US",
+      "agencies": [
+        {
+          "name": "The Viscusi Group",
+          "url": "https://www.viscusigroup.com",
+          "specialty": "Furniture, textiles, floorcovering, building products",
+          "notes": "NYC, founded 1985, 1-year replacement guarantee"
+        },
+        {
+          "name": "JMJ Phillip",
+          "url": "https://jmjphillip.com/industries/furniture-executive-search-firm",
+          "specialty": "Furniture manufacturing, sourcing, supply chain",
+          "notes": "Detroit HQ, offices in Chicago, NY, Dallas, Atlanta, LA"
+        },
+        {
+          "name": "Interior Talent",
+          "url": "https://interiortalent.com",
+          "specialty": "Design/architecture and furniture manufacturing leadership",
+          "notes": "Executive Search Division for senior-level design/manufacturing roles"
+        },
+        {
+          "name": "Sales Recruiters (Jean Maxwell)",
+          "url": "https://salesrecruiters.net/commercial-interiorsarchitectural-productshome-furnishings",
+          "specialty": "Commercial interiors, luxury home furnishings sales",
+          "notes": "40 years experience, IIDA/NEWH member network"
+        }
+      ]
+    },
+    {
+      "region": "Italy — Fashion, Textile, Luxury (Milan)",
+      "countryCode": "IT",
+      "agencies": [
+        {
+          "name": "Between Research",
+          "url": "https://betweenresearch.com",
+          "specialty": "Niche fashion headhunting, creative-to-industrialization roles",
+          "notes": "Founded by ex-Romeo Gigli/Issey Miyake alumni, global reach incl. Shanghai office"
+        },
+        {
+          "name": "Adami & Associati",
+          "url": "https://www.adamiassociati.com/offerte-di-lavoro-luxury-fashion",
+          "specialty": "Luxury Fashion, Made in Italy textile/apparel supply chain",
+          "notes": "Covers full production filiera, not just retail/creative"
+        },
+        {
+          "name": "S.A. Fashion Recruitment (Studio Santagostino)",
+          "url": "https://www.sastudiosantagostino.com/sa-fashion-recruitment",
+          "specialty": "Fashion & luxury specialization",
+          "notes": "Milan-based boutique headhunting"
+        },
+        {
+          "name": "Value Search",
+          "url": "https://www.valuesearch.it/headhunter-fashion-milano",
+          "specialty": "Moda, Fashion & Luxury, Retail",
+          "notes": "200+ international projects in last 5 years"
+        },
+        {
+          "name": "Reverse",
+          "url": "https://reverse.hr/it/headhunting-milano",
+          "specialty": "Fashion, Luxury & Design practice",
+          "notes": "One of several sector verticals at this Milan headhunting firm"
+        }
+      ]
+    },
+    {
+      "region": "Turkey — Textile, Manufacturing, Executive",
+      "countryCode": "TR",
+      "agencies": [
+        {
+          "name": "Keller Executive Search Turkey",
+          "url": "https://www.kellerexecutivesearch.com/executive-recruitment-headhunters-turkey",
+          "specialty": "Textiles, industrial machinery, home decor",
+          "notes": "Covers Istanbul and Ankara"
+        },
+        {
+          "name": "FMC Group",
+          "url": "https://fmcgroup.com/services/recruitment-turkey",
+          "specialty": "Direct search across niche industries",
+          "notes": "Istanbul-based, mid-to-senior level focus"
+        },
+        {
+          "name": "Gini Talent",
+          "url": "https://clutch.co/tr/hr/recruiting",
+          "specialty": "Staffing and headhunting, various industries",
+          "notes": "High client satisfaction ratings on Clutch"
+        },
+        {
+          "name": "ACCUR Istanbul",
+          "url": "https://accurservices.com/offices/istanbul-turkey-executive-recruiters",
+          "specialty": "Luxury and consumer goods",
+          "notes": "Istanbul office of the US-based ACCUR network"
+        }
+      ]
+    },
+    {
+      "region": "Dubai / UAE — Luxury & Retail",
+      "countryCode": "AE",
+      "agencies": [
+        {
+          "name": "Robert Walters Dubai",
+          "url": "https://www.robertwalters.ae/expertise/luxury-and-retail.html",
+          "specialty": "Luxury & Retail practice",
+          "notes": "25+ years in Middle East, offices in Dubai and Abu Dhabi"
+        },
+        {
+          "name": "Guildhall",
+          "url": "https://guildhall.agency",
+          "specialty": "Confidential C-suite/executive search",
+          "notes": "8x award-winning, 1000+ placements across UAE, Saudi Arabia, GCC"
+        },
+        {
+          "name": "Luxury Recruit",
+          "url": "https://www.luxuryrecruit.com",
+          "specialty": "Consumer and luxury sector exclusively",
+          "notes": "UK + international markets, executive search division"
+        },
+        {
+          "name": "Charterhouse",
+          "url": "https://www.bayzat.com/blog/recruitment-agencies-dubai",
+          "specialty": "Cross-industry, strong UAE presence",
+          "notes": "Nearly 20 years in Dubai, ~10-day turnaround, large candidate database"
+        },
+        {
+          "name": "Michael Page UAE",
+          "url": "https://www.michaelpage.ae/jobs/luxury",
+          "specialty": "Dedicated Luxury jobs vertical",
+          "notes": "Global recruitment consultancy with UAE-specific luxury listings"
+        }
+      ]
+    },
+    {
+      "region": "Uzbekistan — General Executive (no dedicated fashion/luxury specialists found)",
+      "countryCode": "UZ",
+      "agencies": [
+        {
+          "name": "Antal Uzbekistan",
+          "url": "https://www.antal.com/recruitment/uzbekistan-tashkent-ata",
+          "specialty": "FMCG, retail, manufacturing, C-level search",
+          "notes": "Tashkent-based, part of global Antal group, est. 2019"
+        },
+        {
+          "name": "TalentLAB (Vladimirskaya.uz)",
+          "url": "https://vladimirskaya.uz/en",
+          "specialty": "C-level and commercial director searches",
+          "notes": "Covers Uzbekistan, Kazakhstan, Saudi Arabia, UAE"
+        },
+        {
+          "name": "HRC Uzbekistan",
+          "url": "https://hrc.uz/en",
+          "specialty": "Top management search",
+          "notes": "Large local database (~91,000 candidates)"
+        }
+      ]
+    },
+    {
+      "region": "Hong Kong — General Executive & Retail (no dedicated fashion/luxury specialists found)",
+      "countryCode": "HK",
+      "agencies": [
+        {
+          "name": "Robert Walters Hong Kong",
+          "url": "https://www.robertwalters.com.hk",
+          "specialty": "Retail, consumer goods, sales & marketing",
+          "notes": "No API; contact/CV submission only"
+        },
+        {
+          "name": "Charterhouse Hong Kong",
+          "url": "https://www.charterhouse.com.hk",
+          "specialty": "Cross-industry executive search",
+          "notes": "No API; contact/CV submission only"
+        }
+      ]
+    },
+    {
+      "region": "China — General Executive & Retail (no dedicated fashion/luxury specialists found)",
+      "countryCode": "CN",
+      "agencies": [
+        {
+          "name": "Michael Page China",
+          "url": "https://www.michaelpage.com.cn",
+          "specialty": "Retail, luxury, FMCG",
+          "notes": "No API; contact/CV submission only"
+        },
+        {
+          "name": "Antal China",
+          "url": "https://www.antal.com/recruitment/china",
+          "specialty": "Cross-industry, C-level search",
+          "notes": "No API; contact/CV submission only"
+        }
+      ]
+    },
+    {
+      "region": "Thailand — General Executive (no dedicated fashion/luxury specialists found)",
+      "countryCode": "TH",
+      "agencies": [
+        {
+          "name": "Robert Walters Thailand",
+          "url": "https://www.robertwalters.co.th",
+          "specialty": "Retail, consumer, sales & marketing",
+          "notes": "No API; contact/CV submission only"
+        }
+      ]
+    },
+    {
+      "region": "Vietnam — General Executive (no dedicated fashion/luxury specialists found)",
+      "countryCode": "VN",
+      "agencies": [
+        {
+          "name": "Navigos Search",
+          "url": "https://www.navigossearch.com",
+          "specialty": "Cross-industry executive search, largest local firm",
+          "notes": "No API; contact/CV submission only"
+        }
+      ]
+    },
+    {
+      "region": "Kazakhstan — General Executive",
+      "countryCode": "KZ",
+      "agencies": [
+        {
+          "name": "TalentLAB (Vladimirskaya.uz network)",
+          "url": "https://vladimirskaya.uz/en",
+          "specialty": "C-level and commercial director searches",
+          "notes": "Covers Kazakhstan alongside Uzbekistan, Saudi Arabia, UAE"
+        },
+        {
+          "name": "ANCOR Kazakhstan",
+          "url": "https://ancor.kz/en/services/recruitment/executive-search",
+          "specialty": "Cross-industry executive search",
+          "notes": "No public API for jobs; hh.kz (below) is the actual API source for KZ listings"
+        }
+      ]
+    },
+    {
+      "region": "Switzerland — Luxury, Watches & Jewelry",
+      "countryCode": "CH",
+      "agencies": [
+        {
+          "name": "Richemont Careers (direct)",
+          "url": "https://www.richemont.com/en/home/careers/",
+          "specialty": "Watches, jewelry, luxury goods group HQ",
+          "notes": "Geneva HQ; proprietary careers site, no public API"
+        },
+        {
+          "name": "Nigel Wright Group Switzerland",
+          "url": "https://www.nigelwright.com",
+          "specialty": "Luxury goods executive search",
+          "notes": "No API; contact/CV submission only"
+        }
+      ]
+    },
+    {
+      "region": "France — Fashion Capital",
+      "countryCode": "FR",
+      "agencies": [
+        {
+          "name": "LVMH Careers (direct)",
+          "url": "https://www.lvmh.com/en/join-us/our-job-offers",
+          "specialty": "Luxury conglomerate HQ",
+          "notes": "Proprietary careers site, no public API"
+        },
+        {
+          "name": "Kering Careers (direct)",
+          "url": "https://www.keringtalent.com",
+          "specialty": "Luxury conglomerate HQ",
+          "notes": "Proprietary careers site, no public API"
+        }
+      ]
+    },
+    {
+      "region": "Israel — Executive Search (general, no dedicated fashion/luxury specialists found)",
+      "countryCode": "IL",
+      "agencies": [
+        {
+          "name": "Kishurim HR",
+          "url": "https://kishurimhr.co.il",
+          "specialty": "Global executive search, active since 1989",
+          "notes": "Tel Aviv-based, part of IESF global search group"
+        },
+        {
+          "name": "Pedersen & Partners Tel Aviv",
+          "url": "https://www.pedersenandpartners.com/offices/tel-aviv/israel",
+          "specialty": "Retail, manufacturing, financial services, tech",
+          "notes": "Herzliya Pituach office, opened 2007, global network"
+        },
+        {
+          "name": "Hunter",
+          "url": "https://hunter.co.il/en",
+          "specialty": "Cross-industry executive search and global recruitment",
+          "notes": "Leading Israeli executive search firm"
+        }
+      ]
+    }
+  ],
+  "boardAndPrivateEquitySearchFirms": [
+    {
+      "name": "Heidrick & Struggles",
+      "url": "https://www.heidrick.com",
+      "notes": "Global executive search with dedicated Board & CEO and Private Equity practices"
+    },
+    {
+      "name": "Spencer Stuart",
+      "url": "https://www.spencerstuart.com",
+      "notes": "Board and CEO succession specialists, strong PE portfolio-company practice"
+    },
+    {
+      "name": "Russell Reynolds Associates",
+      "url": "https://www.russellreynolds.com",
+      "notes": "Board effectiveness and Private Equity practice groups"
+    },
+    {
+      "name": "Egon Zehnder",
+      "url": "https://www.egonzehnder.com",
+      "notes": "Board consulting and CEO/Board search practice"
+    },
+    {
+      "name": "Korn Ferry",
+      "url": "https://www.kornferry.com",
+      "notes": "Board & CEO Services practice, global reach"
+    },
+    {
+      "name": "NACD (National Association of Corporate Directors)",
+      "url": "https://www.nacdonline.org",
+      "notes": "US board director network and governance resource, not a recruiter but useful for board opportunities"
+    }
+  ],
+  "chambersOfCommerce": [
+    {
+      "name": "Italian Chamber of Commerce Hong Kong & Macao",
+      "url": "https://icc.org.hk",
+      "notes": "Founded 1996/1997, connects Italian and HK/Macao businesses, hosts networking and trade events"
+    },
+    {
+      "name": "SwissCham Hong Kong",
+      "url": "https://swisschamhk.org",
+      "notes": "Swiss Chamber of Commerce in Hong Kong, publishes a jobs board"
+    },
+    {
+      "name": "SwissCham China",
+      "url": "https://swisscham.com.cn",
+      "notes": "Offices across mainland China; job postings and member directory"
+    },
+    {
+      "name": "SwissCham Asia",
+      "url": "https://www.swisscham.asia",
+      "notes": "Umbrella body connecting Switzerland with Greater China, Korea, SE Asia, South Asia, Central Asia, Middle East"
+    },
+    {
+      "name": "Italian Chamber of Commerce in China (Shanghai/Beijing)",
+      "url": "https://www.china.camcom.it",
+      "notes": "Official Italian Chamber of Commerce for mainland China"
+    },
+    {
+      "name": "Swiss-Chinese Chamber of Commerce (Zurich)",
+      "url": "https://www.sccc.ch",
+      "notes": "Switzerland-based, Zurich/Geneva/Lugano, ~700 corporate and individual members"
+    }
+  ],
+  "textileAssociationsAndFairs": [
+    {
+      "name": "Première Vision (Paris)",
+      "url": "https://www.premierevision.com",
+      "notes": "Leading global textile/fabric trade fair; also runs Première Vision Shenzhen for the China market"
+    },
+    {
+      "name": "Milano Unica",
+      "url": "https://www.milanounica.it",
+      "notes": "Italy's flagship textile trade fair for fabrics, accessories, and leather for fashion"
+    },
+    {
+      "name": "Munich Fabric Start",
+      "url": "https://www.munichfabricstart.com",
+      "notes": "Major European fabric and textile sourcing fair"
+    },
+    {
+      "name": "Intertextile Shanghai",
+      "url": "https://www.intertextile-shanghai-apparelfabrics.hk.messefrankfurt.com",
+      "notes": "Largest textile and apparel fabrics fair in Asia, held in Shanghai"
+    },
+    {
+      "name": "Texworld (Paris / various)",
+      "url": "https://www.texworld-paris.com",
+      "notes": "International fabric sourcing fair, editions in Paris and other cities"
+    },
+    {
+      "name": "Pitti Filati / Pitti Immagine (Florence)",
+      "url": "https://www.pittimmagine.com",
+      "notes": "Italian trade fair group covering yarns (Filati), menswear (Uomo), and more"
+    },
+    {
+      "name": "Sistema Moda Italia (SMI) / Confindustria Moda",
+      "url": "https://www.confindustriamoda.it",
+      "notes": "Italy's national federation for the textile and fashion industry"
+    },
+    {
+      "name": "EURATEX (European Apparel and Textile Confederation)",
+      "url": "https://euratex.eu",
+      "notes": "EU-wide textile and apparel industry association, Brussels-based"
+    },
+    {
+      "name": "HKTDC Hong Kong Fashion Week",
+      "url": "https://hkfashionweekfw.hktdc.com",
+      "notes": "Hong Kong Trade Development Council's fashion and textile trade event"
+    },
+    {
+      "name": "China National Textile and Apparel Council (CNTAC)",
+      "url": "http://www.cntac.org.cn",
+      "notes": "China's national textile and apparel industry association"
+    },
+    {
+      "name": "Vietnam Textile and Apparel Association (VITAS)",
+      "url": "https://vitas.org.vn",
+      "notes": "Vietnam's national textile and garment industry association"
+    },
+    {
+      "name": "Thailand Textile Institute (THTI)",
+      "url": "https://www.thaitextile.org",
+      "notes": "Thailand's national textile industry body and trade promotion organization"
+    },
+    {
+      "name": "Kazakhstan Light Industry Association",
+      "url": "https://kzlegprom.kz",
+      "notes": "Kazakhstan's national association covering textile and light manufacturing"
+    }
+  ]
+}
