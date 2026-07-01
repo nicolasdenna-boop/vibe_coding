@@ -153,7 +153,7 @@ async def fetch_lever(client: httpx.AsyncClient, token: str) -> list[dict]:
 
 
 # --- Adzuna (broad country coverage, free tier) ---
-ADZUNA_COUNTRIES = ["us", "gb", "it", "ae", "fr", "de", "il"]  # "il" is best-effort — Adzuna's Israel coverage is unconfirmed, but the fetcher fails gracefully if unsupported
+ADZUNA_COUNTRIES = ["us", "gb", "it", "fr", "de", "il"]  # "il" is best-effort — Adzuna's Israel coverage is unconfirmed, but the fetcher fails gracefully if unsupported. "ae" removed - confirmed 404, Adzuna doesn't cover the UAE.
 ADZUNA_URL = "https://api.adzuna.com/v1/api/jobs/{country}/search/1"
 
 
@@ -351,9 +351,6 @@ async def _fetch_all_jobs(role: str = "") -> list[dict]:
             for query in queries:
                 for country in ADZUNA_COUNTRIES:
                     tasks.append(fetch_adzuna(client, country, query))
-                # Dedicated Abu Dhabi call so it isn't drowned out by Dubai
-                # within the general "ae" country results
-                tasks.append(fetch_adzuna(client, "ae", query, where="Abu Dhabi"))
                 tasks.append(fetch_reed(client, query))
                 tasks.append(fetch_jooble(client, query))
                 tasks.append(fetch_jooble(client, query, location="Israel"))
@@ -412,7 +409,7 @@ async def debug_sources(role: str = "Commercial Director luxury fashion") -> dic
             "adzuna_us": fetch_adzuna(client, "us", role),
             "adzuna_gb": fetch_adzuna(client, "gb", role),
             "adzuna_it": fetch_adzuna(client, "it", role),
-            "adzuna_ae": fetch_adzuna(client, "ae", role),
+            "adzuna_fr": fetch_adzuna(client, "fr", role),
             "reed": fetch_reed(client, role),
             "jooble": fetch_jooble(client, role),
             "hh_kz": fetch_hh_kz(client, role),
