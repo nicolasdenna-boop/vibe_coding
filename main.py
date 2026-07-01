@@ -55,7 +55,7 @@ LEVER_BOARDS: list[str] = [
 ]
 LEVER_URL = "https://api.lever.co/v0/postings/{token}?mode=json"
 
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")  # gemini-2.0-flash was deprecated/shut down June 1, 2026
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent"
 GEMINI_BATCH_SIZE = 25
 GEMINI_CONCURRENCY = 5
