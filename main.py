@@ -60,6 +60,22 @@ GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_M
 GEMINI_BATCH_SIZE = 25
 GEMINI_CONCURRENCY = 5
 GEMINI_DESCRIPTION_CHARS = 600
+GEMINI_MAX_RETRIES = 4
+GEMINI_RETRY_BASE_DELAY = 2.0
+
+
+async def _post_gemini_with_retry(client: httpx.AsyncClient, api_key: str, payload: dict) -> httpx.Response:
+    """POST to Gemini, retrying with exponential backoff on 429 (rate limit)
+    and 503 (transient overload) - both are common on free-tier API keys
+    once a request fans out into several concurrent scoring calls."""
+    delay = GEMINI_RETRY_BASE_DELAY
+    for attempt in range(GEMINI_MAX_RETRIES):
+        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+        if response.status_code not in (429, 503) or attempt == GEMINI_MAX_RETRIES - 1:
+            return response
+        await asyncio.sleep(delay)
+        delay *= 2
+    return response
 
 CANDIDATE_LANGUAGES = ["English", "French", "Italian", "German", "Spanish", "Hebrew (basic)"]
 
@@ -546,7 +562,7 @@ async def _score_batch(
     }
 
     async with semaphore:
-        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+        response = await _post_gemini_with_retry(client, api_key, payload)
     response.raise_for_status()
     text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
     results = json.loads(text)
@@ -821,7 +837,7 @@ async def _filter_scan_batch(
         },
     }
     async with semaphore:
-        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+        response = await _post_gemini_with_retry(client, api_key, payload)
     response.raise_for_status()
     text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
     return json.loads(text)
@@ -988,7 +1004,7 @@ async def _rank_top10(candidates: list[dict]) -> list[dict]:
     }
 
     async with httpx.AsyncClient(timeout=60.0) as client:
-        response = await client.post(GEMINI_URL, params={"key": api_key}, json=payload)
+        response = await _post_gemini_with_retry(client, api_key, payload)
     response.raise_for_status()
     text = response.json()["candidates"][0]["content"]["parts"][0]["text"]
     results = json.loads(text)
