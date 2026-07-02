@@ -22,7 +22,7 @@ executive intake, 2026-07.*
 
 ## 2. Positioning thesis (your personal brand in one line)
 
-> **"Keep the know-how — make it shine."**
+> **"Where heritage is the warp, and technology the weft."**
 > An elite luxury-textile commercial leader who deliberately went to master AI
 > and modern management, and now fuses heritage craft with technology to
 > modernize and elevate the commercial engine of premium houses.
@@ -47,8 +47,8 @@ Uzbekistan. **Optimizing for:** scope & seniority, then mission & product.
 **Short (elevator):** *"I spent 15 years building the commercial side of luxury
 textile — most recently as Commercial Director at Hermès, on the Executive
 Committee. I hit a ceiling, saw AI reshaping the world, and went to master it
-with a full-time MBA. Now I want to take this industry's incredible know-how and
-make it shine — modern commercial leadership, powered by technology."*
+with a full-time MBA. Now I want to take this industry's incredible know-how and carry it
+forward: modern commercial leadership, powered by technology."*
 
 **The "why I left Hermès" answer (own it, don't hide it):** a deliberate,
 ambitious choice — a ceiling reached at the summit, plus a genuine conviction
@@ -127,7 +127,7 @@ the package follow the level. Don't volunteer a number early.
 1. **Commercial Director · Luxury Fashion & High-End Textile | ex-Hermès | Fusing heritage craft with AI & commercial transformation**
 2. Commercial & GM Leadership in Luxury Textile | ex-Hermès & Zegna | Global MBA (AI & Entrepreneurship) | Europe ↔ Asia
 3. I help heritage textile & luxury houses modernize their commercial engine | ex-Hermès Commercial Director | AI-driven growth
-4. Chief Commercial Officer / GM — Luxury & Textile | ex-Hermès Executive Committee | *Keep the know-how, make it shine* ✨
+4. Chief Commercial Officer / GM — Luxury & Textile | ex-Hermès Executive Committee | *Where heritage is the warp, and technology the weft* ✨
 5. Strategic Commercial Leader · Luxury Fashion & Textile | ex-Hermès | Global MBA AI & Entrepreneurship | Board-ready | IT/FR/EN
 
 *(Recruiters search by keywords — keep "Commercial Director / Luxury / Textile /
@@ -157,7 +157,7 @@ Hermès" in whichever you pick.)*
 >
 > What drives me is simple: I love textile — its craft, its materials, its
 > makers. My mission now is to take the extraordinary **know-how of this industry
-> and make it shine** — redesigning commercial functions and bringing in AI and
+> and give it a future**, redesigning commercial functions and bringing in AI and
 > technology, without ever losing the human, heritage heart of luxury.
 >
 > I'm looking for my next chapter as a **Commercial / General Management leader**
