@@ -5,6 +5,58 @@ Only [1] changes per person. Paste [2]+[3]+[4] from below.
 
 ---
 
+# ★ READY-TO-SEND TEMPLATES (by typology)
+
+Grab the block for your audience, replace only the **[HOOK]** and the links, send.
+
+## ① Headhunter / Executive search (also Board & PE search)
+> Hi [Name],
+> [HOOK — one line on their placement focus/region.]
+> I'm a placeable, board-ready commercial executive. 15+ years scaling luxury
+> fashion and textile operations across Europe and Asia, most recently six years
+> as Commercial Director at Hermès Textile Division, on the Business Unit
+> Executive Committee. I've run P&Ls up to €30M, led teams of 10 to 13 across
+> multiple markets, and I'm finishing a Global MBA at Tel Aviv University.
+> Actively looking and open to relocation: Europe, Asia, the Gulf, or the US.
+> Would you be open to a short call so I'm on your radar for the right Commercial
+> Director / CCO / GM mandate in luxury textile and fashion? Here's my calendar if
+> it's easier: [Calendly link].
+> Best, Nicolas
+
+## ② Investor / Startup (VC funds, PE funds, founders)
+> Hi [Name],
+> [HOOK — one line on their portfolio company or product.]
+> I've spent my career doing the thing most technical founders struggle with:
+> getting luxury brands and manufacturers to actually say yes. At Hermès I grew a
+> department from €100K to €2M; at my own venture, Brand Selection, I built a
+> phygital B2B platform now live with 27 Italian SME brands and a 3.4× lift in
+> order value. I'm finishing an MBA in AI and entrepreneurship, and I know exactly
+> how this industry buys, which is usually the hardest translation problem for
+> genuinely innovative textile-tech.
+> Would a short chat on your go-to-market be useful? *(VC/PE variant: I'd be glad
+> to be a commercial resource for your portfolio — worth 15 minutes?)*
+> You can see more here: [portfolio link]. Calendar: [Calendly link].
+> Best, Nicolas
+
+## ③ Association / Chamber / Textile body
+> Hi [Name],
+> [HOOK — one line on the organization's mission / the intersection it serves.]
+> My career has been built at the intersection your organization exists to serve:
+> connecting luxury brands, manufacturers, and markets across Europe and Asia,
+> most recently at Hermès Textile Division. I recently completed a research
+> journey along the Silk Road through six countries, studying traditional textile
+> craft alongside its modern industrial evolution. I'd value being part of your
+> network, both to contribute what I've learned and to stay close to the people
+> and companies shaping the industry's next chapter.
+> How can I get involved: attend the next event, become a member, or be
+> introduced to member companies?
+> Best, Nicolas
+
+*Fill once: [Calendly link] and [portfolio link]. Then only [HOOK] changes per
+person. Component library (individual YOU / ASK / NEXT pieces) is below.*
+
+---
+
 ## [1] HOOK — write one fresh line per contact (the only variable)
 
 One sentence proving you looked them up. Formula: *their specific focus/region/
