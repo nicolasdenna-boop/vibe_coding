@@ -224,50 +224,20 @@
   </div>
 </section>
 
-<!-- ================= BALANCED SCORECARD ================= -->
+<!-- ================= IMPACT ================= -->
 <section>
   <div class="wrap">
     <div class="sec-head reveal">
-      <span class="eyebrow">Impact · A Balanced Scorecard</span>
-      <h2>Measured on every axis that matters.</h2>
+      <span class="eyebrow">Selected Impact</span>
+      <h2>Numbers that hold their weight.</h2>
     </div>
-    <div class="bsc reveal">
-      <div class="q">
-        <div class="qh"><span class="qn">01</span><span class="ql">Financial</span></div>
-        <div class="metric">20<span class="u">×</span></div>
-        <ul>
-          <li>New textile-accessories line built from scratch, <b>€100K → €2M</b>.</li>
-          <li><b>~€30M</b> commercial P&amp;L led across four Asian offices.</li>
-          <li><b>+40%</b> turnover growth at Bonotto.</li>
-        </ul>
-      </div>
-      <div class="q">
-        <div class="qh"><span class="qn">02</span><span class="ql">Customer &amp; Market</span></div>
-        <div class="metric">300 <span class="u">→ 20</span></div>
-        <ul>
-          <li>Client portfolio re-engineered to a <b>premium core</b>, higher service and margin.</li>
-          <li><b>27 brands</b> onboarded to a phygital B2B marketplace.</li>
-          <li><b>3.4×</b> average order value on the platform I built.</li>
-        </ul>
-      </div>
-      <div class="q">
-        <div class="qh"><span class="qn">03</span><span class="ql">Operations &amp; Excellence</span></div>
-        <div class="metric">8 <span class="u">sites</span></div>
-        <ul>
-          <li>Restructured a business unit spanning <b>eight textile factories</b>.</li>
-          <li>Cross-skilled the team into <b>hybrid commercial-technical</b> roles.</li>
-          <li>Cut tradeshow &amp; sampling cost while <b>protecting margin</b>.</li>
-        </ul>
-      </div>
-      <div class="q">
-        <div class="qh"><span class="qn">04</span><span class="ql">Innovation &amp; Growth</span></div>
-        <div class="metric">Craft <span class="u">× AI</span></div>
-        <ul>
-          <li>Global MBA in AI &amp; Entrepreneurship; multiple <b>AI certifications</b>.</li>
-          <li>Conceived a live <b>phygital 3D store</b>, a digital twin for retail.</li>
-          <li>Invited to speak on <b>Chinese television</b>.</li>
-        </ul>
-      </div>
+    <div class="stats reveal">
+      <div class="stat"><div class="num" data-to="6"></div><div class="lbl"><b>Years as Commercial Director</b> at Hermès, on the Business Unit Executive Committee.</div></div>
+      <div class="stat"><div class="num" data-to="20" data-suffix="×"></div><div class="lbl">A new textile-accessories line <b>built from scratch</b>, €100K to €2M.</div></div>
+      <div class="stat"><div class="num" data-prefix="~€" data-to="30" data-suffix="M"></div><div class="lbl">Commercial <b>P&amp;L across four Asian offices</b> at Zegna Baruffa.</div></div>
+      <div class="stat"><div class="num" data-prefix="+" data-to="40" data-suffix="%"></div><div class="lbl">Turnover growth across <b>four European markets</b> at Bonotto.</div></div>
+      <div class="stat"><div class="num" data-to="300" data-arrow="20"></div><div class="lbl">Client portfolio <b>re-engineered to a premium core</b>, lifting service and margin.</div></div>
+      <div class="stat"><div class="num" data-to="3.4" data-suffix="×" data-dec="1"></div><div class="lbl">Order-value uplift on my <b>phygital platform</b>, Brand Selection.</div></div>
     </div>
   </div>
 </section>
@@ -404,6 +374,18 @@ function animNum(el){
   }
   requestAnimationFrame(frame);
 }
+
+// ---------- interview: autoplay when scrolled into view ----------
+document.querySelectorAll('.tv').forEach(function(v){
+  v.setAttribute('playsinline','');
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){
+      var p=v.play();
+      if(p && p.catch){ p.catch(function(){ v.muted=true; v.play().catch(function(){}); }); }
+    } else { if(!v.paused) v.pause(); }
+  });},{threshold:0.55});
+  io.observe(v);
+});
 
 // ---------- woven-thread hero canvas ----------
 (function(){
