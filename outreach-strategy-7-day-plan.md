@@ -29,6 +29,50 @@ touches or reached indirectly.
 
 ---
 
+## ★ Send strategy (updated — read before anything)
+
+**Signature line:** *"Where heritage is the warp, and technology the weft."*
+
+**THE GATE — do not send a single message until BOTH are true:**
+1. **LinkedIn is live and matches the CV** — headline, About, professional
+   photo, and the **portfolio link in Featured**. Every recipient checks
+   LinkedIn within 30 seconds; a mismatch kills credibility.
+2. **The portfolio is hosted** (Netlify/Vercel) so you have a clean link to share.
+
+**Timing:** start now — senior searches run 3–6 months, which matches your
+availability (don't wait for the MBA to finish). Send **Tue–Thu, 8–10am** local
+to the recipient; avoid Monday AM / Friday PM. Roll out over ~2 weeks, not one day.
+
+**Warm intros beat cold sends ~10:1** — so the *first* list is not the 90
+strangers, it's the **5–10 people who already know and rate you**. Ask them:
+*"who's the right person to speak to?"* The portfolio makes you forwardable.
+
+**What to send whom (lead document):**
+
+| Audience | Lead with | Priority |
+|---|---|---|
+| Warm intros / your network | Portfolio link + Master CV | **1st** |
+| Textile Exec Search · Board/PE · PE funds (Tier 1) | **Master CV (PDF)**; portfolio link as "more" | 2nd |
+| Regional luxury/fashion recruiters (Tier 2) | Master CV + portfolio link | 3rd |
+| VC funds & fashion-tech startups (Tier 2) | **Portfolio link** (leads) + Hybrid CV | 3rd |
+| Big luxury/textile houses (Tier 3) | Reach *through* Tier-1 headhunters | via Tier 1 |
+| Chambers & associations (Tier 3) | Portfolio link — "get involved," not a pitch | ongoing |
+
+**Rule:** clean **Master CV** for traditional/board/PE and any online form
+(ATS-safe); **portfolio link** leads for fashion, startups, and warm contacts.
+Everyone gets the portfolio as a link — you just choose headline vs supporting.
+
+**Two questions every recruiter will probe — have the answer ready:**
+- *Why leave Hermès?* → "Reached the summit of the commercial ladder and chose to
+  reinvent — a top-10 global MBA in the age of AI." (courage/vision, not restless.)
+- *Base vs target?* → "EU citizen, mobile / relocating to Europe." (Make it a
+  non-issue.)
+
+**Documents:** `CV_Nicolas_Denna_2026_Master.pdf` (default),
+`CV_Nicolas_Denna_2026_Hybrid.pdf` (fashion/startup), hosted **portfolio** link.
+
+---
+
 ## The one rule that saves you the most time
 
 **Never cold-email a big textile company's generic HR inbox.** Your directory
@@ -96,8 +140,16 @@ in a note app / the tracker so they're one paste away.
 Every [4] NEXT line ends with your booking link so a "yes" needs zero
 back-and-forth. This is a big minimum-effort win.
 
+**E. Clear THE GATE (non-negotiable before any send).**
+- **Host the portfolio** (Netlify Drop / Vercel) → get the public link.
+- **Publish LinkedIn:** paste the headline + About (from
+  `candidate-profile-nicolas-denna.md`), set the professional photo, and put the
+  **portfolio link in Featured**. Turn on "Open to work → recruiters only."
+- Only once LinkedIn matches the CV and the portfolio is live do you send anything.
+
 **End of Day 1 deliverable:** premium active, profile polished, reusable blocks
-written, booking link live.
+written, booking link live, **portfolio hosted, LinkedIn live and consistent
+(the gate is cleared).**
 
 ---
 
@@ -136,10 +188,15 @@ research now, in one batch, while you're already looking them up. Examples:
 
 ---
 
-### DAY 3 — Tier 1: Head-hunters & PE *(1.5–2 h, execution)*
+### DAY 3 — Warm intros first, then Tier 1: Head-hunters & PE *(1.5–2 h, execution)*
 
-Send to all 16 Tier 1 targets. This is your highest-value day — do it when
-you're sharp.
+**Start with warm intros (highest conversion of the whole week).** Before any
+cold outreach, message **5–10 people who already know and rate you** with the
+portfolio link: *"Starting a focused search — who's the right person for you to
+point me to?"* This is where most meetings actually come from.
+
+Then send to all 16 Tier 1 targets — **lead with the Master CV (PDF)**, portfolio
+link as "more." This is your highest-value cold day; do it when you're sharp.
 - **Channel:** connection request **with a note** referencing the hook; if
   they're a 3rd-degree/hard-to-reach senior partner, spend an **InMail**.
 - **The ask (Tier 1 exec search / regional):** *"Would you be open to a
