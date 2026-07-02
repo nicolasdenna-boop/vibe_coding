@@ -15,6 +15,17 @@ positioning by *being* hand-built.
   - `IMG_2335 / IMG_2358 / IMG_2348.jpg` — the Silk Road / Uzbekistan photos.
   - `IMG_1919.jpg` — the "La Moda Italiana @ Almaty" poster.
 
+## Two ready image slots (just drop the files in)
+The layout already has two picture slots wired with graceful fallbacks — add the
+files and they appear automatically; leave them out and the site hides those
+elements cleanly.
+- **`media/carrera.jpg`** → shows inside the Carrera VR store card (a wide
+  screenshot of the 3D shop works best).
+- **`media/goyard.jpg`** → a full-width band by the Hermès story, captioned
+  "High-end screen-printing I oversaw at Hermès textile" (a landscape photo).
+  *(Want it to play as video instead? Name it `media/goyard.mp4` and ask me to
+  switch the slot to a video element.)*
+
 ## Check / personalise
 - **Add your portrait (high impact):** drop a photo at `media/portrait.jpg`
   (roughly 4:5 portrait). It appears automatically in the "turning point"

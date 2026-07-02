@@ -180,6 +180,15 @@
   .storecard .go:hover{background:var(--accent-dk)}
   .storecard .live{position:absolute; top:22px; right:24px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent-dk)}
   .storecard .live:before{content:"●"; color:#3c9a6b; margin-right:6px; font-size:9px; vertical-align:1px}
+  .storecard .shot{width:100%; display:block; border-radius:3px; border:1px solid var(--line); margin:4px 0 16px}
+
+  /* full-width image band (Goyard / Hermès printing) */
+  .band{padding:0; position:relative; line-height:0}
+  .band img{width:100%; height:min(66vh,600px); object-fit:cover; display:block}
+  .band .band-cap{position:absolute; left:0; right:0; bottom:0; line-height:1.4; padding:56px 32px 26px;
+    color:#EDE6D8; background:linear-gradient(transparent,rgba(15,12,8,.78));
+    font-family:"Cormorant Garamond",Georgia,serif; font-style:italic; font-size:clamp(18px,2.2vw,24px)}
+  .band .band-cap .wrap{padding:0; max-width:1080px; margin:0 auto}
 
   @media(max-width:760px){
     .stats{grid-template-columns:repeat(2,1fr)}
@@ -222,6 +231,12 @@
       <div class="sig">I didn't leave the craft. I left to give it a future.</div>
     </div>
   </div>
+</section>
+
+<!-- ================= GOYARD BAND (auto-hides if media/goyard.jpg absent) ================= -->
+<section class="band" id="goyard-band">
+  <img src="media/goyard.jpg" alt="High-end screen-printing at Hermès textile" onerror="var s=document.getElementById('goyard-band'); if(s) s.remove();">
+  <div class="band-cap"><div class="wrap">High-end screen-printing I oversaw at Hermès textile.</div></div>
 </section>
 
 <!-- ================= IMPACT ================= -->
@@ -315,6 +330,7 @@
       <div>
         <div class="storecard">
           <span class="live">Live</span>
+          <img class="shot" src="media/carrera.jpg" alt="Carrera VR Store interior" onerror="this.remove()">
           <div class="se">Phygital Retail · My concept</div>
           <h3>Carrera VR Store</h3>
           <p>A virtual 3D shop where buyers walk the space and purchase brands in total autonomy. A working prototype of my phygital concept, live online.</p>
