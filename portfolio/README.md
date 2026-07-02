@@ -15,16 +15,16 @@ positioning by *being* hand-built.
   - `IMG_2335 / IMG_2358 / IMG_2348.jpg` — the Silk Road / Uzbekistan photos.
   - `IMG_1919.jpg` — the "La Moda Italiana @ Almaty" poster.
 
-## Two ready image slots (just drop the files in)
-The layout already has two picture slots wired with graceful fallbacks — add the
-files and they appear automatically; leave them out and the site hides those
-elements cleanly.
-- **`media/carrera.jpg`** → shows inside the Carrera VR store card (a wide
-  screenshot of the 3D shop works best).
-- **`media/goyard.jpg`** → a full-width band by the Hermès story, captioned
-  "High-end screen-printing I oversaw at Hermès textile" (a landscape photo).
-  *(Want it to play as video instead? Name it `media/goyard.mp4` and ask me to
-  switch the slot to a video element.)*
+## The two career images
+Currently loaded from your postimages links (they render in any browser online):
+- **Carrera VR store** → inside the store card. `https://i.postimg.cc/XYLcC45x/carrera.png`
+- **Goyard screen-printing at Hermès** → full-width band by the Hermès story.
+  `https://i.postimg.cc/htsbdcm3/goyard.png`
+
+Both have graceful fallbacks (if a link ever breaks, the element hides itself —
+no broken image). **For full permanence** (no dependency on postimages), save the
+two files into `media/` as `carrera.jpg` and `goyard.jpg` and change the two
+`<img src=...>` back to `media/carrera.jpg` / `media/goyard.jpg`.
 
 ## Check / personalise
 - **Add your portrait (high impact):** drop a photo at `media/portrait.jpg`
