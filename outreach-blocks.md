@@ -157,3 +157,56 @@ Always end with the booking link so a "yes" costs zero admin.
 > entrepreneurship. Would a short chat on your go-to-market be useful? [link]
 
 *Portfolio link to include for warm/fashion/startup audiences: your hosted site.*
+
+---
+
+# ★ MODELLI PRONTI ALL'INVIO — VERSIONE ITALIANA (per tipologia)
+
+## ① Head-hunter / Ricerca di dirigenti (anche Board & PE search)
+> Gentile [Nome],
+> [HOOK — una riga sul suo focus/area di placement.]
+> Sono un dirigente commerciale immediatamente collocabile e pronto anche per
+> ruoli di board. Oltre 15 anni a far crescere operazioni nella moda di lusso e
+> nel tessile di alta gamma tra Europa e Asia, più di recente sei anni come
+> Direttore Commerciale presso Hermès Textile Division, membro del Comitato
+> Esecutivo della Business Unit. Ho gestito P&L fino a 30 milioni di euro, guidato
+> team da 10 a 13 persone su più mercati, e sto completando un Global MBA alla Tel
+> Aviv University. Sono attivamente alla ricerca e disponibile a trasferimenti:
+> Europa, Asia, Golfo o Stati Uniti.
+> Sarebbe disponibile per una breve call, così da entrare nel suo radar per il
+> giusto incarico da Direttore Commerciale / CCO / GM nel lusso, tessile e moda?
+> Le lascio il mio calendario, se più comodo: [Calendly link].
+> Un cordiale saluto, Nicolas
+
+## ② Investitori / Startup (fondi VC, fondi PE, founder)
+> Gentile [Nome],
+> [HOOK — una riga sulla loro azienda in portafoglio o sul prodotto.]
+> Ho passato la carriera a fare ciò con cui la maggior parte dei founder tecnici
+> fatica: convincere i brand e i produttori del lusso a dire davvero di sì. In
+> Hermès ho portato un reparto da 100 mila a 2 milioni di euro; nella mia impresa,
+> Brand Selection, ho costruito una piattaforma B2B phygital oggi attiva con 27
+> brand italiani e un valore medio d'ordine moltiplicato per 3,4. Sto completando
+> un MBA in AI e imprenditorialità, e conosco esattamente il modo in cui questo
+> settore compra, che di solito è il problema di traduzione più difficile per il
+> textile-tech davvero innovativo.
+> Le farebbe piacere una breve call sulla vostra strategia commerciale /
+> go-to-market? (variante VC/PE: sarei felice di essere una risorsa commerciale
+> per il vostro portafoglio, vale 15 minuti?)
+> Può vedere di più qui: [portfolio link]. Calendario: [Calendly link].
+> Un cordiale saluto, Nicolas
+
+## ③ Associazioni / Camere di commercio / Enti tessili
+> Gentile [Nome],
+> [HOOK — una riga sulla missione dell'organizzazione.]
+> La mia carriera si è costruita esattamente all'incrocio che la vostra
+> organizzazione esiste per servire: mettere in connessione brand del lusso,
+> produttori e mercati tra Europa e Asia, più di recente presso Hermès Textile
+> Division. Di recente ho completato un viaggio di ricerca lungo la Via della Seta
+> attraverso sei Paesi, studiando l'artigianato tessile tradizionale insieme alla
+> sua evoluzione industriale contemporanea. Mi farebbe piacere entrare a far parte
+> della vostra rete, sia per contribuire con ciò che ho imparato, sia per restare
+> vicino alle persone e alle aziende che stanno costruendo il prossimo capitolo
+> del settore.
+> Come posso partecipare: prendere parte al prossimo evento, diventare socio, o
+> essere presentato alle aziende associate?
+> Un cordiale saluto, Nicolas
